@@ -1,14 +1,25 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import AdminDashboard from "./AdminDashboard";
+import VendorDashboard from "./VendorDashboard";
+import DeliveryDashboard from "./DeliveryDashboard";
+import { UserRole } from "@/components/RoleSwitcher";
 
 const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+  const [currentRole] = useState<UserRole>("admin");
+
+  const renderDashboard = () => {
+    switch (currentRole) {
+      case "admin":
+        return <AdminDashboard />;
+      case "vendor":
+        return <VendorDashboard />;
+      case "delivery":
+        return <DeliveryDashboard />;
+    }
+  };
+
+  return <DashboardLayout>{renderDashboard()}</DashboardLayout>;
 };
 
 export default Index;
