@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Package, XCircle, CheckCircle, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/MetricCard";
+import { toast } from "sonner";
 
 const mockReturns = [
   {
@@ -57,6 +59,35 @@ const mockReturns = [
 ];
 
 export default function Returns() {
+  const [returns, setReturns] = useState(mockReturns);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+
+  const filteredReturns = returns.filter((returnItem) => {
+    const matchesSearch = returnItem.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      returnItem.orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      returnItem.customer.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = filterStatus === "all" || returnItem.status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
+
+  const handleExportData = () => {
+    toast.success("Exporting returns data...");
+  };
+
+  const handleApprove = (id: string) => {
+    setReturns(returns.map(r => r.id === id ? { ...r, status: "approved" } : r));
+    toast.success(`Return ${id} approved`);
+  };
+
+  const handleReject = (id: string) => {
+    toast.error(`Return ${id} rejected`);
+  };
+
+  const handleView = (id: string) => {
+    toast.info(`Viewing return ${id}`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -66,7 +97,7 @@ export default function Returns() {
             Manage return requests and refund processing
           </p>
         </div>
-        <Button variant="outline">Export Data</Button>
+        <Button variant="outline" onClick={handleExportData}>Export Data</Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
@@ -114,8 +145,18 @@ export default function Returns() {
           <div className="flex justify-between items-center">
             <CardTitle>Return Requests</CardTitle>
             <div className="flex gap-2">
-              <Input placeholder="Search returns..." className="w-64" />
-              <Button variant="outline">Filter</Button>
+              <Input 
+                placeholder="Search returns..." 
+                className="w-64"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Button 
+                variant="outline"
+                onClick={() => setFilterStatus(filterStatus === "all" ? "pending_approval" : "all")}
+              >
+                {filterStatus === "all" ? "Show Pending" : "Show All"}
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -135,7 +176,7 @@ export default function Returns() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockReturns.map((returnItem) => (
+              {filteredReturns.map((returnItem) => (
                 <TableRow key={returnItem.id}>
                   <TableCell className="font-medium">
                     {returnItem.id}
@@ -170,16 +211,16 @@ export default function Returns() {
                     <div className="flex gap-2">
                       {returnItem.status === "pending_approval" && (
                         <>
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" onClick={() => handleApprove(returnItem.id)}>
                             Approve
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" onClick={() => handleReject(returnItem.id)}>
                             Reject
                           </Button>
                         </>
                       )}
                       {returnItem.status !== "pending_approval" && (
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => handleView(returnItem.id)}>
                           View
                         </Button>
                       )}

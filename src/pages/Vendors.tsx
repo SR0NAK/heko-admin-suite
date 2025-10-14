@@ -71,6 +71,16 @@ export default function Vendors() {
   const [vendors, setVendors] = useState(mockVendors);
   const [formOpen, setFormOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<typeof mockVendors[0] | undefined>();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+
+  const filteredVendors = vendors.filter((vendor) => {
+    const matchesSearch = vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      vendor.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      vendor.area.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = filterStatus === "all" || vendor.status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
 
   const handleSaveVendor = (vendor: any) => {
     if (editingVendor) {
@@ -135,8 +145,18 @@ export default function Vendors() {
           <div className="flex justify-between items-center">
             <CardTitle>Vendors</CardTitle>
             <div className="flex gap-2">
-              <Input placeholder="Search vendors..." className="w-64" />
-              <Button variant="outline">Filter</Button>
+              <Input 
+                placeholder="Search vendors..." 
+                className="w-64" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Button 
+                variant="outline"
+                onClick={() => setFilterStatus(filterStatus === "all" ? "active" : "all")}
+              >
+                {filterStatus === "all" ? "Show Active Only" : "Show All"}
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -156,7 +176,7 @@ export default function Vendors() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {vendors.map((vendor) => (
+              {filteredVendors.map((vendor) => (
                 <TableRow key={vendor.id}>
                   <TableCell className="font-medium">{vendor.id}</TableCell>
                   <TableCell>{vendor.name}</TableCell>

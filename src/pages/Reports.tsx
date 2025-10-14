@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { BarChart3, Download, Calendar, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 const reportTypes = [
   {
@@ -51,6 +53,22 @@ const reportTypes = [
 ];
 
 export default function Reports() {
+  const [reportType, setReportType] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  const handleDownload = (format: string) => {
+    if (!reportType || !startDate || !endDate) {
+      toast.error("Please select report type and date range");
+      return;
+    }
+    toast.success(`Downloading ${reportType} report as ${format}...`);
+  };
+
+  const handleGenerateReport = (type: string) => {
+    toast.info(`Generating ${type} report...`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -95,7 +113,7 @@ export default function Reports() {
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <label className="text-sm font-medium">Report Type</label>
-              <Select>
+              <Select value={reportType} onValueChange={setReportType}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select report type" />
                 </SelectTrigger>
@@ -112,25 +130,25 @@ export default function Reports() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Start Date</label>
-              <Input type="date" />
+              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium">End Date</label>
-              <Input type="date" />
+              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </div>
           </div>
 
           <div className="flex gap-2 mt-4">
-            <Button>
+            <Button onClick={() => handleDownload("CSV")}>
               <Download className="h-4 w-4 mr-2" />
               Download CSV
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => handleDownload("Excel")}>
               <Download className="h-4 w-4 mr-2" />
               Download Excel
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => handleDownload("PDF")}>
               <Download className="h-4 w-4 mr-2" />
               Download PDF
             </Button>
@@ -155,7 +173,7 @@ export default function Reports() {
               </div>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => handleGenerateReport(report.title)}>
                 <Calendar className="h-4 w-4 mr-2" />
                 Generate Report
               </Button>

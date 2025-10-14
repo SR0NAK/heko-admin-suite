@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Users, TrendingUp, Wallet, CheckCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/MetricCard";
+import { toast } from "sonner";
 
 const mockReferrals = [
   {
@@ -53,6 +55,25 @@ const mockReferrals = [
 ];
 
 export default function Referrals() {
+  const [referrals, setReferrals] = useState(mockReferrals);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+
+  const filteredReferrals = referrals.filter((referral) => {
+    const matchesSearch = referral.referrer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      referral.referee.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = filterStatus === "all" || referral.status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
+
+  const handleExportData = () => {
+    toast.success("Exporting referral data...");
+  };
+
+  const handleViewDetails = (id: string) => {
+    toast.info(`Viewing details for referral ${id}`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -62,7 +83,7 @@ export default function Referrals() {
             Track referrals and reward conversions
           </p>
         </div>
-        <Button variant="outline">Export Data</Button>
+        <Button variant="outline" onClick={handleExportData}>Export Data</Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
@@ -113,8 +134,18 @@ export default function Referrals() {
           <div className="flex justify-between items-center">
             <CardTitle>Referral Activity</CardTitle>
             <div className="flex gap-2">
-              <Input placeholder="Search referrals..." className="w-64" />
-              <Button variant="outline">Filter</Button>
+              <Input 
+                placeholder="Search referrals..." 
+                className="w-64"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Button 
+                variant="outline"
+                onClick={() => setFilterStatus(filterStatus === "all" ? "converted" : "all")}
+              >
+                {filterStatus === "all" ? "Show Converted" : "Show All"}
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -132,7 +163,7 @@ export default function Referrals() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockReferrals.map((referral) => (
+              {filteredReferrals.map((referral) => (
                 <TableRow key={referral.id}>
                   <TableCell>{referral.date}</TableCell>
                   <TableCell className="font-medium">
@@ -167,7 +198,7 @@ export default function Referrals() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => handleViewDetails(referral.id)}>
                       View Details
                     </Button>
                   </TableCell>

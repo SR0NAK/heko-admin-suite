@@ -15,10 +15,10 @@ interface MetricCardProps {
 }
 
 const variantClasses = {
-  default: "bg-[hsl(var(--metric-bg-1))]",
-  primary: "bg-[hsl(var(--metric-bg-2))]",
-  secondary: "bg-[hsl(var(--metric-bg-3))]",
-  accent: "bg-[hsl(var(--metric-bg-4))]",
+  default: "bg-card",
+  primary: "bg-card",
+  secondary: "bg-card",
+  accent: "bg-card",
 };
 
 export function MetricCard({
@@ -51,7 +51,7 @@ export function MetricCard({
               </p>
             )}
           </div>
-          <div className="p-3 rounded-lg bg-white/50">
+          <div className="p-3 rounded-lg bg-primary/10">
             <Icon className="h-6 w-6 text-primary" />
           </div>
         </div>

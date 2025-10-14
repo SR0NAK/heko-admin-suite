@@ -71,6 +71,16 @@ export default function DeliveryPartners() {
   const [partners, setPartners] = useState(mockPartners);
   const [formOpen, setFormOpen] = useState(false);
   const [editingPartner, setEditingPartner] = useState<typeof mockPartners[0] | undefined>();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+
+  const filteredPartners = partners.filter((partner) => {
+    const matchesSearch = partner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      partner.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      partner.vehicle.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = filterStatus === "all" || partner.status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
 
   const handleSavePartner = (partner: any) => {
     if (editingPartner) {
@@ -134,8 +144,18 @@ export default function DeliveryPartners() {
           <div className="flex justify-between items-center">
             <CardTitle>Delivery Partners</CardTitle>
             <div className="flex gap-2">
-              <Input placeholder="Search partners..." className="w-64" />
-              <Button variant="outline">Filter</Button>
+              <Input 
+                placeholder="Search partners..." 
+                className="w-64"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Button 
+                variant="outline"
+                onClick={() => setFilterStatus(filterStatus === "all" ? "active" : "all")}
+              >
+                {filterStatus === "all" ? "Show Active Only" : "Show All"}
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -156,7 +176,7 @@ export default function DeliveryPartners() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {partners.map((partner) => (
+              {filteredPartners.map((partner) => (
                 <TableRow key={partner.id}>
                   <TableCell className="font-medium">{partner.id}</TableCell>
                   <TableCell>{partner.name}</TableCell>
