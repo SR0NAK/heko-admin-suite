@@ -33,10 +33,12 @@ export function BannerForm({ open, onOpenChange, banner, onSave }: BannerFormPro
     active: true,
     order: 0,
   });
+  const [imagePreview, setImagePreview] = useState<string>('/placeholder.svg');
 
   useEffect(() => {
     if (banner) {
       setFormData(banner);
+      setImagePreview(banner.image);
     } else {
       setFormData({
         id: '',
@@ -47,8 +49,22 @@ export function BannerForm({ open, onOpenChange, banner, onSave }: BannerFormPro
         active: true,
         order: 0,
       });
+      setImagePreview('/placeholder.svg');
     }
   }, [banner, open]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setImagePreview(result);
+        setFormData({ ...formData, image: result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,6 +101,21 @@ export function BannerForm({ open, onOpenChange, banner, onSave }: BannerFormPro
               onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
               rows={2}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="image">Banner Image</Label>
+            <Input
+              id="image"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+            />
+            {imagePreview && (
+              <div className="mt-2 rounded-lg overflow-hidden border">
+                <img src={imagePreview} alt="Preview" className="w-full h-32 object-cover" />
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">

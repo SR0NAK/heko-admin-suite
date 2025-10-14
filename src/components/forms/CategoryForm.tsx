@@ -30,10 +30,12 @@ export function CategoryForm({ open, onOpenChange, category, onSave }: CategoryF
     order: 0,
   });
   const [subcategoryInput, setSubcategoryInput] = useState('');
+  const [imagePreview, setImagePreview] = useState<string>('/placeholder.svg');
 
   useEffect(() => {
     if (category) {
       setFormData(category);
+      setImagePreview(category.image);
     } else {
       setFormData({
         id: '',
@@ -42,9 +44,23 @@ export function CategoryForm({ open, onOpenChange, category, onSave }: CategoryF
         subcategories: [],
         order: 0,
       });
+      setImagePreview('/placeholder.svg');
     }
     setSubcategoryInput('');
   }, [category, open]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setImagePreview(result);
+        setFormData({ ...formData, image: result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,6 +104,21 @@ export function CategoryForm({ open, onOpenChange, category, onSave }: CategoryF
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="image">Category Image</Label>
+            <Input
+              id="image"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+            />
+            {imagePreview && (
+              <div className="mt-2 rounded-lg overflow-hidden border">
+                <img src={imagePreview} alt="Preview" className="w-full h-24 object-cover" />
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
