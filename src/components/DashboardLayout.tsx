@@ -1,14 +1,14 @@
-import { ReactNode, useState } from "react";
+import { ReactNode } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { UserRole } from "./RoleSwitcher";
+import { useRole } from "@/contexts/RoleContext";
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [currentRole, setCurrentRole] = useState<UserRole>("admin");
+  const { currentRole, setCurrentRole } = useRole();
 
   return (
     <SidebarProvider>

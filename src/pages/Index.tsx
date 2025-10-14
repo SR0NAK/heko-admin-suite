@@ -1,11 +1,10 @@
-import { useState } from "react";
-import { UserRole } from "@/components/RoleSwitcher";
+import { useRole } from "@/contexts/RoleContext";
 import AdminDashboard from "./AdminDashboard";
 import VendorDashboard from "./VendorDashboard";
 import DeliveryDashboard from "./DeliveryDashboard";
 
 export default function Index() {
-  const [currentRole] = useState<UserRole>("admin");
+  const { currentRole } = useRole();
 
   return (
     <>
