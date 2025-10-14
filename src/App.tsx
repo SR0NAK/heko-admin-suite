@@ -24,6 +24,9 @@ import VendorReturns from "./pages/VendorReturns";
 import ProductAvailability from "./pages/ProductAvailability";
 import VendorHistory from "./pages/VendorHistory";
 import VendorSettings from "./pages/VendorSettings";
+import Deliveries from "./pages/Deliveries";
+import Pickups from "./pages/Pickups";
+import DeliveryHistory from "./pages/DeliveryHistory";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -56,6 +59,10 @@ const App = () => (
             <Route path="/product-availability" element={<ProtectedRoute><ProductAvailability /></ProtectedRoute>} />
             <Route path="/vendor-history" element={<ProtectedRoute><VendorHistory /></ProtectedRoute>} />
             <Route path="/vendor-settings" element={<ProtectedRoute><VendorSettings /></ProtectedRoute>} />
+            {/* Delivery Partner Routes */}
+            <Route path="/deliveries" element={<ProtectedRoute><Deliveries /></ProtectedRoute>} />
+            <Route path="/pickups" element={<ProtectedRoute><Pickups /></ProtectedRoute>} />
+            <Route path="/delivery-history" element={<ProtectedRoute><DeliveryHistory /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
