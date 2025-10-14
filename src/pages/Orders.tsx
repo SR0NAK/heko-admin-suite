@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { Search, Eye, Download } from "lucide-react";
 import { mockOrders } from "@/lib/mockData";
 
 export default function Orders() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [orders] = useState(mockOrders);
 
@@ -93,7 +95,7 @@ export default function Orders() {
                     <StatusBadge status={order.status} />
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" onClick={() => navigate(`/orders/${order.id}`)}>
                       <Eye className="h-4 w-4" />
                     </Button>
                   </TableCell>

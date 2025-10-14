@@ -13,16 +13,61 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus, Edit, Trash2, Package } from "lucide-react";
 import { mockProducts } from "@/lib/mockData";
+import { ProductForm } from "@/components/forms/ProductForm";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Products() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [products] = useState(mockProducts);
+  const [products, setProducts] = useState(mockProducts);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleSaveProduct = (product: any) => {
+    if (editingProduct) {
+      setProducts(products.map(p => p.id === product.id ? product : p));
+      toast({ title: "Product updated successfully" });
+    } else {
+      setProducts([...products, product]);
+      toast({ title: "Product added successfully" });
+    }
+    setEditingProduct(null);
+  };
+
+  const handleEditClick = (product: any) => {
+    setEditingProduct(product);
+    setIsFormOpen(true);
+  };
+
+  const handleAddClick = () => {
+    setEditingProduct(null);
+    setIsFormOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteId) {
+      setProducts(products.filter(p => p.id !== deleteId));
+      toast({ title: "Product deleted successfully" });
+      setDeleteId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -33,7 +78,7 @@ export default function Products() {
             Manage your product catalog and inventory
           </p>
         </div>
-        <Button>
+        <Button onClick={handleAddClick}>
           <Plus className="h-4 w-4 mr-2" />
           Add Product
         </Button>
@@ -161,10 +206,10 @@ export default function Products() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" onClick={() => handleEditClick(product)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" onClick={() => setDeleteId(product.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -175,6 +220,28 @@ export default function Products() {
           </Table>
         </CardContent>
       </Card>
+
+      <ProductForm
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        product={editingProduct}
+        onSave={handleSaveProduct}
+      />
+
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this product? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

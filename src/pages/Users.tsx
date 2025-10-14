@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,10 +14,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, Eye, Ban, CheckCircle } from "lucide-react";
 import { mockUsers } from "@/lib/mockData";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Users() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [users] = useState(mockUsers);
+  const [users, setUsers] = useState(mockUsers);
 
   const filteredUsers = users.filter(
     (user) =>
@@ -24,6 +28,15 @@ export default function Users() {
       user.phone.includes(searchTerm) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleToggleStatus = (userId: string) => {
+    setUsers(users.map(user => 
+      user.id === userId 
+        ? { ...user, status: user.status === 'active' ? 'blocked' : 'active' }
+        : user
+    ));
+    toast({ title: "User status updated" });
+  };
 
   return (
     <div className="space-y-6">
@@ -102,10 +115,10 @@ export default function Users() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" onClick={() => navigate(`/users/${user.id}`)}>
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" onClick={() => handleToggleStatus(user.id)}>
                         {user.status === "active" ? (
                           <Ban className="h-4 w-4" />
                         ) : (
