@@ -15,6 +15,8 @@ import {
   Grid3x3,
   CheckSquare,
   XCircle,
+  DollarSign,
+  UserCircle,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
@@ -63,6 +65,8 @@ const deliveryMenuItems = [
   { title: "Deliveries", url: "/deliveries", icon: Truck },
   { title: "Pickups", url: "/pickups", icon: MapPin },
   { title: "History", url: "/delivery-history", icon: FileText },
+  { title: "Earnings", url: "/delivery-earnings", icon: DollarSign },
+  { title: "Profile", url: "/delivery-profile", icon: UserCircle },
 ];
 
 export function AppSidebar({ currentRole, onRoleChange }: AppSidebarProps) {

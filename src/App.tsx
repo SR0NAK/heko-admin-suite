@@ -27,6 +27,8 @@ import VendorSettings from "./pages/VendorSettings";
 import Deliveries from "./pages/Deliveries";
 import Pickups from "./pages/Pickups";
 import DeliveryHistory from "./pages/DeliveryHistory";
+import DeliveryEarnings from "./pages/DeliveryEarnings";
+import DeliveryProfile from "./pages/DeliveryProfile";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -63,6 +65,8 @@ const App = () => (
             <Route path="/deliveries" element={<ProtectedRoute><Deliveries /></ProtectedRoute>} />
             <Route path="/pickups" element={<ProtectedRoute><Pickups /></ProtectedRoute>} />
             <Route path="/delivery-history" element={<ProtectedRoute><DeliveryHistory /></ProtectedRoute>} />
+            <Route path="/delivery-earnings" element={<ProtectedRoute><DeliveryEarnings /></ProtectedRoute>} />
+            <Route path="/delivery-profile" element={<ProtectedRoute><DeliveryProfile /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
