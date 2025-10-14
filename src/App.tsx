@@ -18,6 +18,11 @@ import Reports from "./pages/Reports";
 import CMS from "./pages/CMS";
 import UserDetail from "./pages/UserDetail";
 import OrderDetail from "./pages/OrderDetail";
+import VendorOrders from "./pages/VendorOrders";
+import VendorReturns from "./pages/VendorReturns";
+import ProductAvailability from "./pages/ProductAvailability";
+import VendorHistory from "./pages/VendorHistory";
+import VendorSettings from "./pages/VendorSettings";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -43,6 +48,12 @@ const App = () => (
           <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
           <Route path="/cms" element={<ProtectedRoute><CMS /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          {/* Vendor Routes */}
+          <Route path="/vendor-orders" element={<ProtectedRoute><VendorOrders /></ProtectedRoute>} />
+          <Route path="/vendor-returns" element={<ProtectedRoute><VendorReturns /></ProtectedRoute>} />
+          <Route path="/product-availability" element={<ProtectedRoute><ProductAvailability /></ProtectedRoute>} />
+          <Route path="/vendor-history" element={<ProtectedRoute><VendorHistory /></ProtectedRoute>} />
+          <Route path="/vendor-settings" element={<ProtectedRoute><VendorSettings /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

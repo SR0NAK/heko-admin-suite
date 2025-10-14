@@ -55,6 +55,7 @@ const vendorMenuItems = [
   { title: "Returns", url: "/vendor-returns", icon: XCircle },
   { title: "Product Availability", url: "/product-availability", icon: Package },
   { title: "History", url: "/vendor-history", icon: FileText },
+  { title: "Settings", url: "/vendor-settings", icon: Settings },
 ];
 
 const deliveryMenuItems = [
