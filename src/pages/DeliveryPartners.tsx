@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/MetricCard";
 import { DeliveryPartnerForm } from "@/components/forms/DeliveryPartnerForm";
+import { DeliveryPartnerDetailDialog } from "@/components/DeliveryPartnerDetailDialog";
 import { toast } from "sonner";
 
 const mockPartners = [
@@ -70,7 +71,9 @@ const mockPartners = [
 export default function DeliveryPartners() {
   const [partners, setPartners] = useState(mockPartners);
   const [formOpen, setFormOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [editingPartner, setEditingPartner] = useState<typeof mockPartners[0] | undefined>();
+  const [selectedPartner, setSelectedPartner] = useState<typeof mockPartners[0] | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
@@ -93,9 +96,22 @@ export default function DeliveryPartners() {
     setEditingPartner(undefined);
   };
 
+  const handleViewClick = (partner: typeof mockPartners[0]) => {
+    setSelectedPartner(partner);
+    setDetailOpen(true);
+  };
+
   const handleEditClick = (partner: typeof mockPartners[0]) => {
     setEditingPartner(partner);
     setFormOpen(true);
+  };
+
+  const handleEditFromDetail = () => {
+    if (selectedPartner) {
+      setDetailOpen(false);
+      setEditingPartner(selectedPartner);
+      setFormOpen(true);
+    }
   };
 
   const handleAddClick = () => {
@@ -202,7 +218,7 @@ export default function DeliveryPartners() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleEditClick(partner)}>
+                      <Button size="sm" variant="outline" onClick={() => handleViewClick(partner)}>
                         View
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => handleEditClick(partner)}>
@@ -216,6 +232,13 @@ export default function DeliveryPartners() {
           </Table>
         </CardContent>
       </Card>
+
+      <DeliveryPartnerDetailDialog
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        partner={selectedPartner}
+        onEdit={handleEditFromDetail}
+      />
 
       <DeliveryPartnerForm
         open={formOpen}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,20 +27,37 @@ interface VendorFormProps {
 }
 
 export function VendorForm({ open, onOpenChange, vendor, onSave }: VendorFormProps) {
-  const [formData, setFormData] = useState<Vendor>(
-    vendor || {
-      id: '',
-      name: '',
-      email: '',
-      phone: '',
-      address: '',
-      gst: '',
-      category: '',
-      status: 'active',
-      rating: 0,
-      totalProducts: 0,
+  const [formData, setFormData] = useState<Vendor>({
+    id: '',
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    gst: '',
+    category: '',
+    status: 'active',
+    rating: 0,
+    totalProducts: 0,
+  });
+
+  useEffect(() => {
+    if (vendor) {
+      setFormData(vendor);
+    } else {
+      setFormData({
+        id: '',
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        gst: '',
+        category: '',
+        status: 'active',
+        rating: 0,
+        totalProducts: 0,
+      });
     }
-  );
+  }, [vendor]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

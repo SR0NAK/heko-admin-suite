@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/MetricCard";
 import { VendorForm } from "@/components/forms/VendorForm";
+import { VendorDetailDialog } from "@/components/VendorDetailDialog";
 import { toast } from "sonner";
 
 const mockVendors = [
@@ -70,7 +71,9 @@ const mockVendors = [
 export default function Vendors() {
   const [vendors, setVendors] = useState(mockVendors);
   const [formOpen, setFormOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<typeof mockVendors[0] | undefined>();
+  const [selectedVendor, setSelectedVendor] = useState<typeof mockVendors[0] | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
@@ -93,9 +96,22 @@ export default function Vendors() {
     setEditingVendor(undefined);
   };
 
+  const handleViewClick = (vendor: typeof mockVendors[0]) => {
+    setSelectedVendor(vendor);
+    setDetailOpen(true);
+  };
+
   const handleEditClick = (vendor: typeof mockVendors[0]) => {
     setEditingVendor(vendor);
     setFormOpen(true);
+  };
+
+  const handleEditFromDetail = () => {
+    if (selectedVendor) {
+      setDetailOpen(false);
+      setEditingVendor(selectedVendor);
+      setFormOpen(true);
+    }
   };
 
   const handleAddClick = () => {
@@ -201,7 +217,7 @@ export default function Vendors() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleEditClick(vendor)}>
+                      <Button size="sm" variant="outline" onClick={() => handleViewClick(vendor)}>
                         View
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => handleEditClick(vendor)}>
@@ -215,6 +231,13 @@ export default function Vendors() {
           </Table>
         </CardContent>
       </Card>
+
+      <VendorDetailDialog
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        vendor={selectedVendor}
+        onEdit={handleEditFromDetail}
+      />
 
       <VendorForm
         open={formOpen}
