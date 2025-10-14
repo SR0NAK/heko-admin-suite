@@ -1,4 +1,4 @@
-import { useState, ReactNode } from "react";
+import { useState } from "react";
 import { FileText, Truck, Package, Calendar, Search, Filter } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,21 +84,6 @@ const mockHistory: HistoryEntry[] = [
   },
 ];
 
-interface DashboardLayoutProps {
-  title: string;
-  children: ReactNode;
-}
-
-function DashboardLayoutWrapper({ title, children }: DashboardLayoutProps) {
-  return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold">{title}</h1>
-        {children}
-      </div>
-    </DashboardLayout>
-  );
-}
 
 export default function DeliveryHistory() {
   const [history] = useState(mockHistory);
@@ -123,8 +108,10 @@ export default function DeliveryHistory() {
   const totalPickups = history.filter((entry) => entry.type === "pickup").length;
 
   return (
-    <DashboardLayoutWrapper title="Delivery History">
+    <DashboardLayout>
       <div className="space-y-6">
+        <h1 className="text-3xl font-bold">Delivery History</h1>
+
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
@@ -268,6 +255,6 @@ export default function DeliveryHistory() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayoutWrapper>
+    </DashboardLayout>
   );
 }

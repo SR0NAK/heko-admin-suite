@@ -1,4 +1,4 @@
-import { useState, ReactNode } from "react";
+import { useState } from "react";
 import { Truck, MapPin, Phone, Clock, CheckCircle2 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,21 +57,6 @@ const mockDeliveries: Delivery[] = [
   },
 ];
 
-interface DashboardLayoutProps {
-  title: string;
-  children: ReactNode;
-}
-
-function DashboardLayoutWrapper({ title, children }: DashboardLayoutProps) {
-  return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold">{title}</h1>
-        {children}
-      </div>
-    </DashboardLayout>
-  );
-}
 
 export default function Deliveries() {
   const [deliveries, setDeliveries] = useState(mockDeliveries);
@@ -134,8 +119,10 @@ export default function Deliveries() {
   };
 
   return (
-    <DashboardLayoutWrapper title="Active Deliveries">
+    <DashboardLayout>
       <div className="space-y-6">
+        <h1 className="text-3xl font-bold">Active Deliveries</h1>
+
         <div className="grid gap-4">
           {deliveries.map((delivery) => (
             <Card key={delivery.id}>
@@ -231,34 +218,34 @@ export default function Deliveries() {
             </CardContent>
           </Card>
         )}
-      </div>
 
-      <Dialog open={showOtpDialog} onOpenChange={setShowOtpDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Verify Delivery OTP</DialogTitle>
-            <DialogDescription>
-              Enter the OTP provided by the customer to complete the delivery.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">
-                Demo OTP: {selectedDelivery?.otp}
-              </p>
-              <Input
-                placeholder="Enter OTP"
-                value={otpInput}
-                onChange={(e) => setOtpInput(e.target.value)}
-                maxLength={4}
-              />
+        <Dialog open={showOtpDialog} onOpenChange={setShowOtpDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Verify Delivery OTP</DialogTitle>
+              <DialogDescription>
+                Enter the OTP provided by the customer to complete the delivery.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Demo OTP: {selectedDelivery?.otp}
+                </p>
+                <Input
+                  placeholder="Enter OTP"
+                  value={otpInput}
+                  onChange={(e) => setOtpInput(e.target.value)}
+                  maxLength={4}
+                />
+              </div>
+              <Button onClick={handleVerifyOtp} className="w-full">
+                Verify & Complete
+              </Button>
             </div>
-            <Button onClick={handleVerifyOtp} className="w-full">
-              Verify & Complete
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </DashboardLayoutWrapper>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </DashboardLayout>
   );
 }

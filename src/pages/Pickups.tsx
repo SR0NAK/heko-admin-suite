@@ -1,4 +1,4 @@
-import { useState, ReactNode } from "react";
+import { useState } from "react";
 import { Package, MapPin, Phone, Clock, CheckCircle2 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,21 +57,6 @@ const mockPickups: Pickup[] = [
   },
 ];
 
-interface DashboardLayoutProps {
-  title: string;
-  children: ReactNode;
-}
-
-function DashboardLayoutWrapper({ title, children }: DashboardLayoutProps) {
-  return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold">{title}</h1>
-        {children}
-      </div>
-    </DashboardLayout>
-  );
-}
 
 export default function Pickups() {
   const [pickups, setPickups] = useState(mockPickups);
@@ -139,8 +124,10 @@ export default function Pickups() {
   };
 
   return (
-    <DashboardLayoutWrapper title="Return Pickups">
+    <DashboardLayout>
       <div className="space-y-6">
+        <h1 className="text-3xl font-bold">Return Pickups</h1>
+
         <div className="grid gap-4">
           {pickups.map((pickup) => (
             <Card key={pickup.id}>
@@ -245,34 +232,34 @@ export default function Pickups() {
             </CardContent>
           </Card>
         )}
-      </div>
 
-      <Dialog open={showOtpDialog} onOpenChange={setShowOtpDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Verify Pickup OTP</DialogTitle>
-            <DialogDescription>
-              Enter the OTP provided by the customer to confirm the pickup.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">
-                Demo OTP: {selectedPickup?.otp}
-              </p>
-              <Input
-                placeholder="Enter OTP"
-                value={otpInput}
-                onChange={(e) => setOtpInput(e.target.value)}
-                maxLength={4}
-              />
+        <Dialog open={showOtpDialog} onOpenChange={setShowOtpDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Verify Pickup OTP</DialogTitle>
+              <DialogDescription>
+                Enter the OTP provided by the customer to confirm the pickup.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Demo OTP: {selectedPickup?.otp}
+                </p>
+                <Input
+                  placeholder="Enter OTP"
+                  value={otpInput}
+                  onChange={(e) => setOtpInput(e.target.value)}
+                  maxLength={4}
+                />
+              </div>
+              <Button onClick={handleVerifyOtp} className="w-full">
+                Verify & Confirm Pickup
+              </Button>
             </div>
-            <Button onClick={handleVerifyOtp} className="w-full">
-              Verify & Confirm Pickup
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </DashboardLayoutWrapper>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </DashboardLayout>
   );
 }
