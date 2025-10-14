@@ -313,7 +313,14 @@ export default function VendorDashboard() {
                 <p className="font-medium">Organic Tomatoes</p>
                 <p className="text-sm text-muted-foreground">In Stock</p>
               </div>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => toast({
+                  title: "Status Updated",
+                  description: "Organic Tomatoes marked as out of stock",
+                })}
+              >
                 Mark Out
               </Button>
             </div>
@@ -322,7 +329,14 @@ export default function VendorDashboard() {
                 <p className="font-medium">Fresh Milk</p>
                 <p className="text-sm text-muted-foreground">In Stock</p>
               </div>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => toast({
+                  title: "Status Updated",
+                  description: "Fresh Milk marked as out of stock",
+                })}
+              >
                 Mark Out
               </Button>
             </div>
@@ -331,7 +345,15 @@ export default function VendorDashboard() {
                 <p className="font-medium">Whole Wheat Bread</p>
                 <p className="text-sm text-destructive">Out of Stock</p>
               </div>
-              <Button size="sm">Mark Available</Button>
+              <Button 
+                size="sm"
+                onClick={() => toast({
+                  title: "Status Updated",
+                  description: "Whole Wheat Bread marked as available",
+                })}
+              >
+                Mark Available
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -350,10 +372,26 @@ export default function VendorDashboard() {
                 Item: Organic Apples • Reason: Quality Issue
               </p>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => toast({
+                    title: "Return Rejected",
+                    description: "Return request for Order #ORD-003 has been rejected",
+                    variant: "destructive",
+                  })}
+                >
                   Reject
                 </Button>
-                <Button size="sm" className="flex-1">
+                <Button 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => toast({
+                    title: "Return Approved",
+                    description: "Return request for Order #ORD-003 has been approved. Pickup will be scheduled.",
+                  })}
+                >
                   Approve
                 </Button>
               </div>

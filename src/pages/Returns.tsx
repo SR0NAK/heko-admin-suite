@@ -21,41 +21,53 @@ const mockReturns = [
     id: "RET-001",
     orderId: "ORD-245",
     customer: "Rajesh Kumar",
-    items: "Organic Apples (1 kg)",
+    items: [{ name: "Organic Apples", quantity: 1, price: 180 }],
     reason: "Damaged product",
-    status: "pending_approval",
-    refundAmount: 180,
-    requestDate: "2024-01-26 10:30 AM",
+    status: "pending",
+    amount: 180,
+    date: "2024-01-26",
+    pickupOtp: null,
+    pickupStatus: null,
+    deliveryPartnerId: null,
   },
   {
     id: "RET-002",
     orderId: "ORD-238",
     customer: "Priya Sharma",
-    items: "Fresh Milk (2 L)",
+    items: [{ name: "Fresh Milk", quantity: 2, price: 60 }],
     reason: "Wrong item delivered",
     status: "approved",
-    refundAmount: 120,
-    requestDate: "2024-01-25 04:15 PM",
+    amount: 120,
+    date: "2024-01-25",
+    pickupOtp: "3456",
+    pickupStatus: "scheduled",
+    deliveryPartnerId: "DP-003",
   },
   {
     id: "RET-003",
     orderId: "ORD-231",
     customer: "Amit Patel",
-    items: "Tomatoes (500g)",
+    items: [{ name: "Tomatoes", quantity: 1, price: 30 }],
     reason: "Not fresh",
     status: "pickup_scheduled",
-    refundAmount: 30,
-    requestDate: "2024-01-25 02:45 PM",
+    amount: 30,
+    date: "2024-01-25",
+    pickupOtp: "7890",
+    pickupStatus: "out_for_pickup",
+    deliveryPartnerId: "DP-001",
   },
   {
     id: "RET-004",
     orderId: "ORD-224",
     customer: "Neha Singh",
-    items: "Bread (2 pcs)",
+    items: [{ name: "Bread", quantity: 2, price: 30 }],
     reason: "Quality issue",
     status: "completed",
-    refundAmount: 60,
-    requestDate: "2024-01-24 11:20 AM",
+    amount: 60,
+    date: "2024-01-24",
+    pickupOtp: null,
+    pickupStatus: "completed",
+    deliveryPartnerId: "DP-002",
   },
 ];
 
@@ -190,10 +202,10 @@ export default function Returns() {
                   </TableCell>
                   <TableCell>{returnItem.orderId}</TableCell>
                   <TableCell>{returnItem.customer}</TableCell>
-                  <TableCell>{returnItem.items}</TableCell>
+                  <TableCell>{returnItem.items.length} item(s)</TableCell>
                   <TableCell>{returnItem.reason}</TableCell>
-                  <TableCell>₹{returnItem.refundAmount}</TableCell>
-                  <TableCell>{returnItem.requestDate}</TableCell>
+                  <TableCell>₹{returnItem.amount}</TableCell>
+                  <TableCell>{returnItem.date}</TableCell>
                   <TableCell>
                     <Badge
                       variant={
