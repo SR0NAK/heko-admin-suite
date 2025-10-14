@@ -131,6 +131,13 @@ export default function VendorDashboard() {
     setDialogOpen(false);
   };
 
+  const handleUpdateStatus = (orderId: string, newStatus: string) => {
+    toast({
+      title: "Status Updated",
+      description: `Order ${orderId} status changed to ${newStatus}`,
+    });
+  };
+
   return (
     <div className="space-y-6">{" "}
       <div>
@@ -271,6 +278,8 @@ export default function VendorDashboard() {
                         disabled={order.status === "out_for_delivery"}
                         onClick={(e) => {
                           e.stopPropagation();
+                          const nextStatus = order.status === "placed" ? "preparing" : "out_for_delivery";
+                          handleUpdateStatus(order.id, nextStatus);
                         }}
                       >
                         {order.status === "out_for_delivery" ? "Out for Delivery" : "Update Status"}

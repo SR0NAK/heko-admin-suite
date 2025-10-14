@@ -196,6 +196,8 @@ export default function VendorOrders() {
                         disabled={order.status === "out_for_delivery"}
                         onClick={(e) => {
                           e.stopPropagation();
+                          const nextStatus = order.status === "placed" ? "preparing" : "out_for_delivery";
+                          handleUpdateStatus(order.id, nextStatus);
                         }}
                       >
                         {order.status === "out_for_delivery" ? "Out for Delivery" : "Update Status"}

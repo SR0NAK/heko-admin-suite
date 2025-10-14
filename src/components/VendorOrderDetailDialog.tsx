@@ -25,6 +25,7 @@ interface Order {
   total: number;
   status: string;
   timeRemaining?: string;
+  acceptedItems?: string[]; // Names of accepted items for partial orders
 }
 
 interface VendorOrderDetailDialogProps {
@@ -50,13 +51,32 @@ export function VendorOrderDetailDialog({
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    if (open) {
+    if (open && order) {
       setPartialMode(false);
-      setSelectedItems(new Set());
+      // If order is partially accepted, pre-select accepted items
+      if (order.status === "partially_accepted" && order.acceptedItems) {
+        const acceptedIndices = new Set(
+          order.items
+            .map((item, index) => order.acceptedItems?.includes(item.name) ? index : -1)
+            .filter(index => index !== -1)
+        );
+        setSelectedItems(acceptedIndices);
+      } else {
+        setSelectedItems(new Set());
+      }
     }
-  }, [open]);
+  }, [open, order]);
 
   if (!order) return null;
+
+  // For partially accepted orders, show only accepted items when not in partial mode
+  const displayItems = order.status === "partially_accepted" && order.acceptedItems && !partialMode
+    ? order.items.filter(item => order.acceptedItems?.includes(item.name))
+    : order.items;
+
+  const displayTotal = order.status === "partially_accepted" && order.acceptedItems && !partialMode
+    ? displayItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    : order.total;
 
   const toggleItemSelection = (index: number) => {
     const newSelected = new Set(selectedItems);
@@ -123,15 +143,20 @@ export function VendorOrderDetailDialog({
           <div>
             <h3 className="font-semibold mb-3 flex items-center gap-2">
               <Package className="h-4 w-4" />
-              Products ({order.items.length} items)
+              Products ({displayItems.length} items)
               {partialMode && (
                 <Badge variant="secondary" className="ml-2">
                   Select items to accept
                 </Badge>
               )}
+              {order.status === "partially_accepted" && !partialMode && (
+                <Badge variant="outline" className="ml-2">
+                  Accepted Items Only
+                </Badge>
+              )}
             </h3>
             <div className="space-y-2">
-              {order.items.map((item, index) => (
+              {displayItems.map((item, index) => (
                 <div
                   key={index}
                   className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
@@ -177,7 +202,7 @@ export function VendorOrderDetailDialog({
                   : "Subtotal"}
               </span>
               <span className="font-medium">
-                ₹{partialMode && selectedItems.size > 0 ? selectedTotal : order.total}
+                ₹{partialMode && selectedItems.size > 0 ? selectedTotal : displayTotal}
               </span>
             </div>
             {partialMode && selectedItems.size > 0 && (
@@ -189,7 +214,7 @@ export function VendorOrderDetailDialog({
             <div className="flex justify-between font-semibold text-lg pt-2 border-t">
               <span>Total Amount</span>
               <span>
-                ₹{partialMode && selectedItems.size > 0 ? selectedTotal : order.total}
+                ₹{partialMode && selectedItems.size > 0 ? selectedTotal : displayTotal}
               </span>
             </div>
           </div>
@@ -203,7 +228,7 @@ export function VendorOrderDetailDialog({
                   <p className="text-sm font-medium">
                     {selectedItems.size === 0
                       ? "Select items you can fulfill from the list above"
-                      : `${selectedItems.size} of ${order.items.length} items selected`}
+                      : `${selectedItems.size} of ${displayItems.length} items selected`}
                   </p>
                 </div>
               )}
