@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Search, Eye, Download } from "lucide-react";
+import { Search, Pencil, Download } from "lucide-react";
 import { mockOrders } from "@/lib/mockData";
 
 export default function Orders() {
@@ -96,7 +96,7 @@ export default function Orders() {
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" onClick={() => navigate(`/orders/${order.id}`)}>
-                      <Eye className="h-4 w-4" />
+                      <Pencil className="h-4 w-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
