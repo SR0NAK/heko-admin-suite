@@ -278,11 +278,20 @@ export default function VendorDashboard() {
                         disabled={order.status === "out_for_delivery"}
                         onClick={(e) => {
                           e.stopPropagation();
-                          const nextStatus = order.status === "placed" ? "preparing" : "out_for_delivery";
-                          handleUpdateStatus(order.id, nextStatus);
+                          let nextStatus = "";
+                          if (order.status === "placed") {
+                            nextStatus = "preparing";
+                          } else if (order.status === "preparing") {
+                            nextStatus = "out_for_delivery";
+                          }
+                          if (nextStatus) {
+                            handleUpdateStatus(order.id, nextStatus);
+                          }
                         }}
                       >
-                        {order.status === "out_for_delivery" ? "Out for Delivery" : "Update Status"}
+                        {order.status === "placed" && "Mark as Preparing"}
+                        {order.status === "preparing" && "Mark Out for Delivery"}
+                        {order.status === "out_for_delivery" && "Out for Delivery"}
                       </Button>
                     </div>
                   </TableCell>
