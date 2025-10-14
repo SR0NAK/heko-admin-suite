@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,6 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Package, User, MapPin, Clock } from "lucide-react";
 
 interface OrderItem {
@@ -31,7 +33,7 @@ interface VendorOrderDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   onAccept?: () => void;
   onReject?: () => void;
-  onPartialAccept?: () => void;
+  onPartialAccept?: (selectedItems: OrderItem[]) => void;
   showActions?: boolean;
 }
 
@@ -44,7 +46,42 @@ export function VendorOrderDetailDialog({
   onPartialAccept,
   showActions = false,
 }: VendorOrderDetailDialogProps) {
+  const [partialMode, setPartialMode] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    if (open) {
+      setPartialMode(false);
+      setSelectedItems(new Set());
+    }
+  }, [open]);
+
   if (!order) return null;
+
+  const toggleItemSelection = (index: number) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedItems(newSelected);
+  };
+
+  const handlePartialAcceptClick = () => {
+    if (partialMode) {
+      const selected = order.items.filter((_, index) => selectedItems.has(index));
+      if (selected.length > 0 && onPartialAccept) {
+        onPartialAccept(selected);
+      }
+    } else {
+      setPartialMode(true);
+    }
+  };
+
+  const selectedTotal = order.items
+    .filter((_, index) => selectedItems.has(index))
+    .reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -87,13 +124,31 @@ export function VendorOrderDetailDialog({
             <h3 className="font-semibold mb-3 flex items-center gap-2">
               <Package className="h-4 w-4" />
               Products ({order.items.length} items)
+              {partialMode && (
+                <Badge variant="secondary" className="ml-2">
+                  Select items to accept
+                </Badge>
+              )}
             </h3>
             <div className="space-y-2">
               {order.items.map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                  className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                    partialMode
+                      ? selectedItems.has(index)
+                        ? "bg-accent border-primary"
+                        : "bg-card hover:bg-accent/50 cursor-pointer"
+                      : "bg-card"
+                  }`}
+                  onClick={() => partialMode && toggleItemSelection(index)}
                 >
+                  {partialMode && (
+                    <Checkbox
+                      checked={selectedItems.has(index)}
+                      onCheckedChange={() => toggleItemSelection(index)}
+                    />
+                  )}
                   <div className="flex-1">
                     <p className="font-medium">{item.name}</p>
                     <p className="text-sm text-muted-foreground">
@@ -116,12 +171,26 @@ export function VendorOrderDetailDialog({
           {/* Order Summary */}
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span className="font-medium">₹{order.total}</span>
+              <span className="text-muted-foreground">
+                {partialMode && selectedItems.size > 0
+                  ? "Selected Items Total"
+                  : "Subtotal"}
+              </span>
+              <span className="font-medium">
+                ₹{partialMode && selectedItems.size > 0 ? selectedTotal : order.total}
+              </span>
             </div>
+            {partialMode && selectedItems.size > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Original Total</span>
+                <span className="text-muted-foreground line-through">₹{order.total}</span>
+              </div>
+            )}
             <div className="flex justify-between font-semibold text-lg pt-2 border-t">
               <span>Total Amount</span>
-              <span>₹{order.total}</span>
+              <span>
+                ₹{partialMode && selectedItems.size > 0 ? selectedTotal : order.total}
+              </span>
             </div>
           </div>
 
@@ -129,21 +198,52 @@ export function VendorOrderDetailDialog({
           {showActions && (
             <>
               <Separator />
+              {partialMode && (
+                <div className="bg-accent/50 p-3 rounded-lg">
+                  <p className="text-sm font-medium">
+                    {selectedItems.size === 0
+                      ? "Select items you can fulfill from the list above"
+                      : `${selectedItems.size} of ${order.items.length} items selected`}
+                  </p>
+                </div>
+              )}
               <div className="flex gap-2 justify-end">
-                {onReject && (
-                  <Button variant="outline" onClick={onReject}>
-                    Reject
-                  </Button>
-                )}
-                {onPartialAccept && (
-                  <Button variant="outline" onClick={onPartialAccept}>
-                    Partial Accept
-                  </Button>
-                )}
-                {onAccept && (
-                  <Button onClick={onAccept}>
-                    Accept All
-                  </Button>
+                {partialMode ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setPartialMode(false);
+                        setSelectedItems(new Set());
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handlePartialAcceptClick}
+                      disabled={selectedItems.size === 0}
+                    >
+                      Confirm Selection ({selectedItems.size} items)
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    {onReject && (
+                      <Button variant="outline" onClick={onReject}>
+                        Reject
+                      </Button>
+                    )}
+                    {onPartialAccept && (
+                      <Button variant="outline" onClick={handlePartialAcceptClick}>
+                        Partial Accept
+                      </Button>
+                    )}
+                    {onAccept && (
+                      <Button onClick={onAccept}>
+                        Accept All
+                      </Button>
+                    )}
+                  </>
                 )}
               </div>
             </>

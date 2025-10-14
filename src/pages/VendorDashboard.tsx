@@ -122,10 +122,11 @@ export default function VendorDashboard() {
     setDialogOpen(false);
   };
 
-  const handlePartialAccept = () => {
+  const handlePartialAccept = (selectedItems: typeof assignedOrders[0]['items']) => {
+    const itemNames = selectedItems.map(item => item.name).join(", ");
     toast({
-      title: "Partial Accept",
-      description: `Select items to accept from order ${selectedOrder?.id}.`,
+      title: "Partial Order Accepted",
+      description: `Accepted ${selectedItems.length} item(s) from order ${selectedOrder?.id}: ${itemNames}`,
     });
     setDialogOpen(false);
   };
