@@ -1,9 +1,11 @@
+import { useState } from "react";
 import {
   ShoppingCart,
   Package,
   Clock,
   TrendingUp,
   AlertTriangle,
+  Eye,
 } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,37 +19,119 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { VendorOrderDetailDialog } from "@/components/VendorOrderDetailDialog";
+import { useToast } from "@/hooks/use-toast";
+
+const newOrderAssignments = [
+  {
+    id: "ORD-012",
+    customer: "Emily Davis",
+    items: [
+      { name: "Organic Apples", quantity: 2, price: 180 },
+      { name: "Fresh Milk", quantity: 2, price: 60 },
+      { name: "Whole Wheat Bread", quantity: 1, price: 45 },
+      { name: "Organic Tomatoes", quantity: 1, price: 80 },
+      { name: "Free Range Eggs", quantity: 1, price: 90 },
+      { name: "Greek Yogurt", quantity: 1, price: 120 },
+    ],
+    total: 735,
+    status: "placed" as const,
+    timeRemaining: "30m",
+  },
+  {
+    id: "ORD-013",
+    customer: "Tom Hardy",
+    items: [
+      { name: "Organic Apples", quantity: 1, price: 180 },
+      { name: "Fresh Milk", quantity: 3, price: 60 },
+      { name: "Brown Bread", quantity: 2, price: 50 },
+      { name: "Paneer", quantity: 1, price: 150 },
+    ],
+    total: 610,
+    status: "placed" as const,
+    timeRemaining: "25m",
+  },
+];
 
 const assignedOrders = [
   {
     id: "ORD-001",
     customer: "John Doe",
-    items: 3,
-    total: "₹750",
+    items: [
+      { name: "Organic Tomatoes", quantity: 2, price: 80 },
+      { name: "Fresh Milk", quantity: 1, price: 60 },
+      { name: "Whole Wheat Bread", quantity: 2, price: 45 },
+    ],
+    total: 310,
     status: "preparing" as const,
     timeRemaining: "15m",
   },
   {
     id: "ORD-005",
     customer: "Sarah Connor",
-    items: 5,
-    total: "₹1,200",
+    items: [
+      { name: "Organic Apples", quantity: 3, price: 180 },
+      { name: "Greek Yogurt", quantity: 2, price: 120 },
+      { name: "Free Range Eggs", quantity: 2, price: 90 },
+      { name: "Fresh Milk", quantity: 2, price: 60 },
+      { name: "Paneer", quantity: 1, price: 150 },
+    ],
+    total: 1200,
     status: "placed" as const,
     timeRemaining: "45m",
   },
   {
     id: "ORD-008",
     customer: "Mike Ross",
-    items: 2,
-    total: "₹450",
+    items: [
+      { name: "Organic Apples", quantity: 1, price: 180 },
+      { name: "Fresh Milk", quantity: 1, price: 60 },
+    ],
+    total: 450,
     status: "out_for_delivery" as const,
     timeRemaining: "-",
   },
 ];
 
 export default function VendorDashboard() {
+  const { toast } = useToast();
+  const [selectedOrder, setSelectedOrder] = useState<typeof assignedOrders[0] | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [showActions, setShowActions] = useState(false);
+
+  const handleViewDetails = (order: typeof assignedOrders[0], withActions = false) => {
+    setSelectedOrder(order);
+    setShowActions(withActions);
+    setDialogOpen(true);
+  };
+
+  const handleAccept = () => {
+    toast({
+      title: "Order Accepted",
+      description: `Order ${selectedOrder?.id} has been accepted successfully.`,
+    });
+    setDialogOpen(false);
+  };
+
+  const handleReject = () => {
+    toast({
+      title: "Order Rejected",
+      description: `Order ${selectedOrder?.id} has been rejected.`,
+      variant: "destructive",
+    });
+    setDialogOpen(false);
+  };
+
+  const handlePartialAccept = () => {
+    toast({
+      title: "Partial Accept",
+      description: `Select items to accept from order ${selectedOrder?.id}.`,
+    });
+    setDialogOpen(false);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6">{" "}
       <div>
         <h1 className="text-3xl font-bold">Vendor Dashboard</h1>
         <p className="text-muted-foreground">
@@ -91,34 +175,42 @@ export default function VendorDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex items-center justify-between p-4 rounded-lg bg-white border">
-            <div>
-              <p className="font-semibold">Order #ORD-012</p>
-              <p className="text-sm text-muted-foreground">
-                6 items • Customer: Emily Davis
-              </p>
+          {newOrderAssignments.map((order) => (
+            <div
+              key={order.id}
+              className="flex items-center justify-between p-4 rounded-lg bg-white border cursor-pointer hover:bg-accent/50 transition-colors"
+              onClick={() => handleViewDetails(order, true)}
+            >
+              <div>
+                <p className="font-semibold">Order #{order.id}</p>
+                <p className="text-sm text-muted-foreground">
+                  {order.items.length} items • Customer: {order.customer}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewDetails(order, true);
+                  }}
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  View Details
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAccept();
+                  }}
+                >
+                  Accept All
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                Reject
-              </Button>
-              <Button size="sm">Accept All</Button>
-            </div>
-          </div>
-          <div className="flex items-center justify-between p-4 rounded-lg bg-white border">
-            <div>
-              <p className="font-semibold">Order #ORD-013</p>
-              <p className="text-sm text-muted-foreground">
-                4 items • Customer: Tom Hardy
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                Partial Accept
-              </Button>
-              <Button size="sm">Accept All</Button>
-            </div>
-          </div>
+          ))}
         </CardContent>
       </Card>
 
@@ -141,11 +233,15 @@ export default function VendorDashboard() {
             </TableHeader>
             <TableBody>
               {assignedOrders.map((order) => (
-                <TableRow key={order.id}>
+                <TableRow
+                  key={order.id}
+                  className="cursor-pointer hover:bg-accent/50"
+                  onClick={() => handleViewDetails(order, false)}
+                >
                   <TableCell className="font-medium">{order.id}</TableCell>
                   <TableCell>{order.customer}</TableCell>
-                  <TableCell>{order.items}</TableCell>
-                  <TableCell className="font-semibold">{order.total}</TableCell>
+                  <TableCell>{order.items.length}</TableCell>
+                  <TableCell className="font-semibold">₹{order.total}</TableCell>
                   <TableCell>
                     <StatusBadge status={order.status} />
                   </TableCell>
@@ -153,9 +249,28 @@ export default function VendorDashboard() {
                     {order.timeRemaining}
                   </TableCell>
                   <TableCell>
-                    <Button variant="outline" size="sm">
-                      Update Status
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetails(order, false);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View Details
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                      >
+                        Update Status
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -223,6 +338,16 @@ export default function VendorDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <VendorOrderDetailDialog
+        order={selectedOrder}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onAccept={handleAccept}
+        onReject={handleReject}
+        onPartialAccept={handlePartialAccept}
+        showActions={showActions}
+      />
     </div>
   );
 }
