@@ -72,6 +72,14 @@ const statusConfig: Record<
 export function StatusBadge({ status, className }: StatusBadgeProps) {
   const config = statusConfig[status];
 
+  if (!config) {
+    return (
+      <Badge className={cn("bg-muted text-muted-foreground", className)}>
+        {status || "Unknown"}
+      </Badge>
+    );
+  }
+
   return (
     <Badge className={cn(config.className, className)}>
       {config.label}

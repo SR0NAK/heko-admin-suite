@@ -121,13 +121,17 @@ export default function OrderDetail() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="placed">Placed</SelectItem>
+                  <SelectItem value="processing">Processing</SelectItem>
+                  <SelectItem value="partially_accepted">Partially Accepted</SelectItem>
                   <SelectItem value="preparing">Preparing</SelectItem>
-                  <SelectItem value="ready">Ready for Pickup</SelectItem>
                   <SelectItem value="picked">Picked Up</SelectItem>
+                  <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
                   <SelectItem value="delivered">Delivered</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="partially_delivered">Partially Delivered</SelectItem>
+                  <SelectItem value="unfulfillable">Unfulfillable</SelectItem>
+                  <SelectItem value="canceled">Canceled</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
                 </SelectContent>
               </Select>
             </div>
