@@ -65,8 +65,8 @@ interface DashboardLayoutProps {
 function DashboardLayoutWrapper({ title, children }: DashboardLayoutProps) {
   return (
     <DashboardLayout>
-      <div>
-        <h1 className="text-3xl font-bold mb-6">{title}</h1>
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold">{title}</h1>
         {children}
       </div>
     </DashboardLayout>
@@ -140,7 +140,8 @@ export default function Pickups() {
 
   return (
     <DashboardLayoutWrapper title="Return Pickups">
-      <div className="grid gap-4">
+      <div className="space-y-6">
+        <div className="grid gap-4">
           {pickups.map((pickup) => (
             <Card key={pickup.id}>
               <CardHeader>
@@ -244,6 +245,7 @@ export default function Pickups() {
             </CardContent>
           </Card>
         )}
+      </div>
 
       <Dialog open={showOtpDialog} onOpenChange={setShowOtpDialog}>
         <DialogContent>

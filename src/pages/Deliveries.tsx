@@ -65,8 +65,8 @@ interface DashboardLayoutProps {
 function DashboardLayoutWrapper({ title, children }: DashboardLayoutProps) {
   return (
     <DashboardLayout>
-      <div>
-        <h1 className="text-3xl font-bold mb-6">{title}</h1>
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold">{title}</h1>
         {children}
       </div>
     </DashboardLayout>
@@ -135,7 +135,8 @@ export default function Deliveries() {
 
   return (
     <DashboardLayoutWrapper title="Active Deliveries">
-      <div className="grid gap-4">
+      <div className="space-y-6">
+        <div className="grid gap-4">
           {deliveries.map((delivery) => (
             <Card key={delivery.id}>
               <CardHeader>
@@ -230,6 +231,7 @@ export default function Deliveries() {
             </CardContent>
           </Card>
         )}
+      </div>
 
       <Dialog open={showOtpDialog} onOpenChange={setShowOtpDialog}>
         <DialogContent>

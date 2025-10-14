@@ -74,8 +74,8 @@ export default function DeliveryProfile() {
 
   return (
     <DashboardLayout>
-      <div>
-        <h1 className="text-3xl font-bold mb-6">Profile</h1>
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold">Profile</h1>
 
         {/* Online/Offline Toggle */}
         <Card>
