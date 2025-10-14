@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,17 +24,31 @@ interface BannerFormProps {
 }
 
 export function BannerForm({ open, onOpenChange, banner, onSave }: BannerFormProps) {
-  const [formData, setFormData] = useState<Banner>(
-    banner || {
-      id: '',
-      title: '',
-      subtitle: '',
-      image: '/placeholder.svg',
-      action: '',
-      active: true,
-      order: 0,
+  const [formData, setFormData] = useState<Banner>({
+    id: '',
+    title: '',
+    subtitle: '',
+    image: '/placeholder.svg',
+    action: '',
+    active: true,
+    order: 0,
+  });
+
+  useEffect(() => {
+    if (banner) {
+      setFormData(banner);
+    } else {
+      setFormData({
+        id: '',
+        title: '',
+        subtitle: '',
+        image: '/placeholder.svg',
+        action: '',
+        active: true,
+        order: 0,
+      });
     }
-  );
+  }, [banner, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

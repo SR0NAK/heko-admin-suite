@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
 
 interface Category {
   id: string;
@@ -20,16 +22,29 @@ interface CategoryFormProps {
 }
 
 export function CategoryForm({ open, onOpenChange, category, onSave }: CategoryFormProps) {
-  const [formData, setFormData] = useState<Category>(
-    category || {
-      id: '',
-      name: '',
-      image: '/placeholder.svg',
-      subcategories: [],
-      order: 0,
-    }
-  );
+  const [formData, setFormData] = useState<Category>({
+    id: '',
+    name: '',
+    image: '/placeholder.svg',
+    subcategories: [],
+    order: 0,
+  });
   const [subcategoryInput, setSubcategoryInput] = useState('');
+
+  useEffect(() => {
+    if (category) {
+      setFormData(category);
+    } else {
+      setFormData({
+        id: '',
+        name: '',
+        image: '/placeholder.svg',
+        subcategories: [],
+        order: 0,
+      });
+    }
+    setSubcategoryInput('');
+  }, [category, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,20 +111,22 @@ export function CategoryForm({ open, onOpenChange, category, onSave }: CategoryF
               />
               <Button type="button" onClick={addSubcategory}>Add</Button>
             </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {formData.subcategories.map((sub, index) => (
-                <div key={index} className="flex items-center gap-2 bg-secondary px-3 py-1 rounded-md">
-                  <span className="text-sm">{sub}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeSubcategory(index)}
-                    className="text-destructive hover:text-destructive/80"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
+            {formData.subcategories.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.subcategories.map((sub, index) => (
+                  <Badge key={index} variant="secondary" className="pr-1">
+                    <span>{sub}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeSubcategory(index)}
+                      className="ml-2 hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
 
           <DialogFooter>
