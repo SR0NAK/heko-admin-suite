@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { X, Upload } from "lucide-react";
 
 interface Product {
   id: string;
@@ -20,6 +21,7 @@ interface Product {
   inStock: boolean;
   stockQuantity: number;
   tags: string[];
+  images?: string[];
 }
 
 interface ProductFormProps {
@@ -30,22 +32,57 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ open, onOpenChange, product, onSave }: ProductFormProps) {
-  const [formData, setFormData] = useState<Product>(
-    product || {
-      id: '',
-      name: '',
-      description: '',
-      price: 0,
-      mrp: 0,
-      discount: 0,
-      unit: '',
-      category: '',
-      subcategory: '',
-      inStock: true,
-      stockQuantity: 0,
-      tags: [],
+  const [formData, setFormData] = useState<Product>({
+    id: '',
+    name: '',
+    description: '',
+    price: 0,
+    mrp: 0,
+    discount: 0,
+    unit: '',
+    category: '',
+    subcategory: '',
+    inStock: true,
+    stockQuantity: 0,
+    tags: [],
+    images: [],
+  });
+
+  // Update form data when product prop changes
+  useEffect(() => {
+    if (product) {
+      setFormData(product);
+    } else {
+      setFormData({
+        id: '',
+        name: '',
+        description: '',
+        price: 0,
+        mrp: 0,
+        discount: 0,
+        unit: '',
+        category: '',
+        subcategory: '',
+        inStock: true,
+        stockQuantity: 0,
+        tags: [],
+        images: [],
+      });
     }
-  );
+  }, [product]);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newImages = Array.from(files).map(file => URL.createObjectURL(file));
+      setFormData({ ...formData, images: [...(formData.images || []), ...newImages] });
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const updatedImages = formData.images?.filter((_, i) => i !== index) || [];
+    setFormData({ ...formData, images: updatedImages });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,6 +140,53 @@ export function ProductForm({ open, onOpenChange, product, onSave }: ProductForm
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="images">Product Images</Label>
+            <div className="space-y-3">
+              {formData.images && formData.images.length > 0 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {formData.images.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={image}
+                        alt={`Product ${index + 1}`}
+                        className="w-full h-24 object-cover rounded-md border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => removeImage(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Input
+                  id="images"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('images')?.click()}
+                  className="w-full"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Images
+                </Button>
+              </div>
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">

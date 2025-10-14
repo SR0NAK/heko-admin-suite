@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Truck, Star, TrendingUp, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,44 +13,86 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/MetricCard";
+import { DeliveryPartnerForm } from "@/components/forms/DeliveryPartnerForm";
+import { toast } from "sonner";
 
 const mockPartners = [
   {
     id: "DP001",
     name: "Rajesh Kumar",
+    email: "rajesh@example.com",
     phone: "+91 9876543210",
+    vehicleType: "Bike",
+    vehicleNumber: "KA01AB1234",
     vehicle: "Bike",
     status: "active",
     activeDeliveries: 3,
+    activeOrders: 3,
     completedToday: 12,
+    completedDeliveries: 245,
     rating: 4.8,
     avgTime: "18 min",
   },
   {
     id: "DP002",
     name: "Suresh Babu",
+    email: "suresh@example.com",
     phone: "+91 9876543211",
+    vehicleType: "Bike",
+    vehicleNumber: "KA01CD5678",
     vehicle: "Bike",
     status: "active",
     activeDeliveries: 2,
+    activeOrders: 2,
     completedToday: 15,
+    completedDeliveries: 312,
     rating: 4.9,
     avgTime: "16 min",
   },
   {
     id: "DP003",
     name: "Amit Sharma",
+    email: "amit@example.com",
     phone: "+91 9876543212",
+    vehicleType: "Scooter",
+    vehicleNumber: "KA02EF9012",
     vehicle: "Scooter",
     status: "offline",
     activeDeliveries: 0,
+    activeOrders: 0,
     completedToday: 0,
+    completedDeliveries: 189,
     rating: 4.6,
     avgTime: "20 min",
   },
 ];
 
 export default function DeliveryPartners() {
+  const [partners, setPartners] = useState(mockPartners);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingPartner, setEditingPartner] = useState<typeof mockPartners[0] | undefined>();
+
+  const handleSavePartner = (partner: any) => {
+    if (editingPartner) {
+      setPartners(partners.map(p => p.id === partner.id ? partner : p));
+      toast.success("Delivery partner updated successfully");
+    } else {
+      setPartners([...partners, partner]);
+      toast.success("Delivery partner added successfully");
+    }
+    setEditingPartner(undefined);
+  };
+
+  const handleEditClick = (partner: typeof mockPartners[0]) => {
+    setEditingPartner(partner);
+    setFormOpen(true);
+  };
+
+  const handleAddClick = () => {
+    setEditingPartner(undefined);
+    setFormOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -59,7 +102,7 @@ export default function DeliveryPartners() {
             Manage delivery partners and assignments
           </p>
         </div>
-        <Button>Add Partner</Button>
+        <Button onClick={handleAddClick}>Add Partner</Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
@@ -113,7 +156,7 @@ export default function DeliveryPartners() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockPartners.map((partner) => (
+              {partners.map((partner) => (
                 <TableRow key={partner.id}>
                   <TableCell className="font-medium">{partner.id}</TableCell>
                   <TableCell>{partner.name}</TableCell>
@@ -139,11 +182,11 @@ export default function DeliveryPartners() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => handleEditClick(partner)}>
                         View
                       </Button>
-                      <Button size="sm" variant="outline">
-                        Assign
+                      <Button size="sm" variant="outline" onClick={() => handleEditClick(partner)}>
+                        Edit
                       </Button>
                     </div>
                   </TableCell>
@@ -153,6 +196,13 @@ export default function DeliveryPartners() {
           </Table>
         </CardContent>
       </Card>
+
+      <DeliveryPartnerForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        partner={editingPartner}
+        onSave={handleSavePartner}
+      />
     </div>
   );
 }

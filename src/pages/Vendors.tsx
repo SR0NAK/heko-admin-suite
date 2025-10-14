@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Package, MapPin, TrendingUp, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,41 +13,86 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/MetricCard";
+import { VendorForm } from "@/components/forms/VendorForm";
+import { toast } from "sonner";
 
 const mockVendors = [
   {
     id: "V001",
     name: "Fresh Mart",
+    email: "freshmart@example.com",
     phone: "+91 9876543210",
+    address: "123 MG Road, Koramangala, Bangalore",
+    gst: "29ABCDE1234F1Z5",
+    category: "Grocery",
     area: "Koramangala",
     status: "active",
     productsAssigned: 156,
+    totalProducts: 156,
     ordersCompleted: 2341,
     acceptanceRate: 94,
+    rating: 4.5,
   },
   {
     id: "V002",
     name: "Green Grocers",
+    email: "greengrocers@example.com",
     phone: "+91 9876543211",
+    address: "456 100 Feet Road, Indiranagar, Bangalore",
+    gst: "29FGHIJ5678K1Z9",
+    category: "Organic",
     area: "Indiranagar",
     status: "active",
     productsAssigned: 203,
+    totalProducts: 203,
     ordersCompleted: 1876,
     acceptanceRate: 89,
+    rating: 4.7,
   },
   {
     id: "V003",
     name: "Daily Fresh",
+    email: "dailyfresh@example.com",
     phone: "+91 9876543212",
+    address: "789 ITPL Main Road, Whitefield, Bangalore",
+    gst: "29KLMNO9012P1Z3",
+    category: "Fresh Produce",
     area: "Whitefield",
     status: "inactive",
     productsAssigned: 98,
+    totalProducts: 98,
     ordersCompleted: 567,
     acceptanceRate: 76,
+    rating: 4.2,
   },
 ];
 
 export default function Vendors() {
+  const [vendors, setVendors] = useState(mockVendors);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingVendor, setEditingVendor] = useState<typeof mockVendors[0] | undefined>();
+
+  const handleSaveVendor = (vendor: any) => {
+    if (editingVendor) {
+      setVendors(vendors.map(v => v.id === vendor.id ? vendor : v));
+      toast.success("Vendor updated successfully");
+    } else {
+      setVendors([...vendors, vendor]);
+      toast.success("Vendor added successfully");
+    }
+    setEditingVendor(undefined);
+  };
+
+  const handleEditClick = (vendor: typeof mockVendors[0]) => {
+    setEditingVendor(vendor);
+    setFormOpen(true);
+  };
+
+  const handleAddClick = () => {
+    setEditingVendor(undefined);
+    setFormOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -56,7 +102,7 @@ export default function Vendors() {
             Manage vendors and their service areas
           </p>
         </div>
-        <Button>Add Vendor</Button>
+        <Button onClick={handleAddClick}>Add Vendor</Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
@@ -110,7 +156,7 @@ export default function Vendors() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockVendors.map((vendor) => (
+              {vendors.map((vendor) => (
                 <TableRow key={vendor.id}>
                   <TableCell className="font-medium">{vendor.id}</TableCell>
                   <TableCell>{vendor.name}</TableCell>
@@ -135,10 +181,10 @@ export default function Vendors() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => handleEditClick(vendor)}>
                         View
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => handleEditClick(vendor)}>
                         Edit
                       </Button>
                     </div>
@@ -149,6 +195,13 @@ export default function Vendors() {
           </Table>
         </CardContent>
       </Card>
+
+      <VendorForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        vendor={editingVendor}
+        onSave={handleSaveVendor}
+      />
     </div>
   );
 }
