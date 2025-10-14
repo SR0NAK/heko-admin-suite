@@ -216,8 +216,11 @@ export default function VendorDashboard() {
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Active Orders</CardTitle>
+          <Button variant="outline" size="sm" onClick={() => window.location.href = '/vendor-orders'}>
+            View All
+          </Button>
         </CardHeader>
         <CardContent>
           <Table>
@@ -265,11 +268,12 @@ export default function VendorDashboard() {
                       <Button
                         variant="outline"
                         size="sm"
+                        disabled={order.status === "out_for_delivery"}
                         onClick={(e) => {
                           e.stopPropagation();
                         }}
                       >
-                        Update Status
+                        {order.status === "out_for_delivery" ? "Out for Delivery" : "Update Status"}
                       </Button>
                     </div>
                   </TableCell>
