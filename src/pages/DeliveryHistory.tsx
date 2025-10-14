@@ -92,8 +92,8 @@ interface DashboardLayoutProps {
 function DashboardLayoutWrapper({ title, children }: DashboardLayoutProps) {
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold">{title}</h1>
+      <div>
+        <h1 className="text-3xl font-bold mb-6">{title}</h1>
         {children}
       </div>
     </DashboardLayout>
@@ -124,7 +124,6 @@ export default function DeliveryHistory() {
 
   return (
     <DashboardLayoutWrapper title="Delivery History">
-      <div className="space-y-6">
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
@@ -267,7 +266,6 @@ export default function DeliveryHistory() {
             </div>
           </CardContent>
         </Card>
-      </div>
     </DashboardLayoutWrapper>
   );
 }

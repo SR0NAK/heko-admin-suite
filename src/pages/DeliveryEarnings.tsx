@@ -100,8 +100,8 @@ export default function DeliveryEarnings() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Earnings</h1>
+      <div>
+        <h1 className="text-3xl font-bold mb-6">Earnings</h1>
 
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
