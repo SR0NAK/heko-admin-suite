@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
+import { VendorOrderDetailDialog } from "@/components/VendorOrderDetailDialog";
 import {
   Table,
   TableBody,
@@ -25,8 +26,12 @@ const mockOrders = [
   {
     id: "ORD-001",
     customer: "John Doe",
-    items: 3,
-    total: "₹750",
+    items: [
+      { name: "Organic Tomatoes", quantity: 2, price: 80 },
+      { name: "Fresh Milk", quantity: 1, price: 60 },
+      { name: "Whole Wheat Bread", quantity: 2, price: 45 },
+    ],
+    total: 310,
     status: "preparing" as const,
     timeRemaining: "15m",
     date: "2024-01-15 10:30",
@@ -34,8 +39,14 @@ const mockOrders = [
   {
     id: "ORD-005",
     customer: "Sarah Connor",
-    items: 5,
-    total: "₹1,200",
+    items: [
+      { name: "Organic Apples", quantity: 3, price: 180 },
+      { name: "Greek Yogurt", quantity: 2, price: 120 },
+      { name: "Free Range Eggs", quantity: 2, price: 90 },
+      { name: "Fresh Milk", quantity: 2, price: 60 },
+      { name: "Paneer", quantity: 1, price: 150 },
+    ],
+    total: 1200,
     status: "placed" as const,
     timeRemaining: "45m",
     date: "2024-01-15 11:15",
@@ -43,8 +54,11 @@ const mockOrders = [
   {
     id: "ORD-008",
     customer: "Mike Ross",
-    items: 2,
-    total: "₹450",
+    items: [
+      { name: "Organic Apples", quantity: 1, price: 180 },
+      { name: "Fresh Milk", quantity: 1, price: 60 },
+    ],
+    total: 450,
     status: "out_for_delivery" as const,
     timeRemaining: "-",
     date: "2024-01-15 09:20",
@@ -52,8 +66,15 @@ const mockOrders = [
   {
     id: "ORD-012",
     customer: "Emily Davis",
-    items: 6,
-    total: "₹1,850",
+    items: [
+      { name: "Organic Apples", quantity: 2, price: 180 },
+      { name: "Fresh Milk", quantity: 2, price: 60 },
+      { name: "Whole Wheat Bread", quantity: 1, price: 45 },
+      { name: "Organic Tomatoes", quantity: 1, price: 80 },
+      { name: "Free Range Eggs", quantity: 1, price: 90 },
+      { name: "Greek Yogurt", quantity: 1, price: 120 },
+    ],
+    total: 735,
     status: "placed" as const,
     timeRemaining: "60m",
     date: "2024-01-15 12:00",
@@ -63,6 +84,8 @@ const mockOrders = [
 export default function VendorOrders() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedOrder, setSelectedOrder] = useState<typeof mockOrders[0] | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const filteredOrders = mockOrders.filter((order) => {
     const matchesSearch =
@@ -71,6 +94,11 @@ export default function VendorOrders() {
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const handleViewDetails = (order: typeof mockOrders[0]) => {
+    setSelectedOrder(order);
+    setDialogOpen(true);
+  };
 
   const handleUpdateStatus = (orderId: string, newStatus: string) => {
     toast({
@@ -133,12 +161,16 @@ export default function VendorOrders() {
             </TableHeader>
             <TableBody>
               {filteredOrders.map((order) => (
-                <TableRow key={order.id}>
+                <TableRow 
+                  key={order.id}
+                  className="cursor-pointer hover:bg-accent/50"
+                  onClick={() => handleViewDetails(order)}
+                >
                   <TableCell className="font-medium">{order.id}</TableCell>
                   <TableCell className="text-sm">{order.date}</TableCell>
                   <TableCell>{order.customer}</TableCell>
-                  <TableCell>{order.items}</TableCell>
-                  <TableCell className="font-semibold">{order.total}</TableCell>
+                  <TableCell>{order.items.length}</TableCell>
+                  <TableCell className="font-semibold">₹{order.total}</TableCell>
                   <TableCell>
                     <StatusBadge status={order.status} />
                   </TableCell>
@@ -146,20 +178,29 @@ export default function VendorOrders() {
                     {order.timeRemaining}
                   </TableCell>
                   <TableCell>
-                    <Select
-                      onValueChange={(value) => handleUpdateStatus(order.id, value)}
-                    >
-                      <SelectTrigger className="w-[140px]">
-                        <SelectValue placeholder="Update" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="preparing">Preparing</SelectItem>
-                        <SelectItem value="ready">Ready</SelectItem>
-                        <SelectItem value="out_for_delivery">
-                          Out for Delivery
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetails(order);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View Details
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={order.status === "out_for_delivery"}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                      >
+                        {order.status === "out_for_delivery" ? "Out for Delivery" : "Update Status"}
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -167,6 +208,13 @@ export default function VendorOrders() {
           </Table>
         </CardContent>
       </Card>
+
+      <VendorOrderDetailDialog
+        order={selectedOrder}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        showActions={false}
+      />
     </div>
   );
 }
