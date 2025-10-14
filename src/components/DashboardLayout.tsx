@@ -14,8 +14,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-muted/30">
         <AppSidebar currentRole={currentRole} onRoleChange={setCurrentRole} />
-        <main className="flex-1 overflow-auto">
-          <div className="container mx-auto p-6">{children}</div>
+        <main className="flex-1 overflow-auto p-6">
+          {children}
         </main>
       </div>
     </SidebarProvider>
