@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/MetricCard";
+import { ReferralDetailDialog } from "@/components/ReferralDetailDialog";
 import { toast } from "sonner";
 
 const mockReferrals = [
@@ -58,6 +59,8 @@ export default function Referrals() {
   const [referrals, setReferrals] = useState(mockReferrals);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [selectedReferral, setSelectedReferral] = useState<typeof mockReferrals[0] | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
   const filteredReferrals = referrals.filter((referral) => {
     const matchesSearch = referral.referrer.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -71,7 +74,11 @@ export default function Referrals() {
   };
 
   const handleViewDetails = (id: string) => {
-    toast.info(`Viewing details for referral ${id}`);
+    const referral = referrals.find(r => r.id === id);
+    if (referral) {
+      setSelectedReferral(referral);
+      setDetailDialogOpen(true);
+    }
   };
 
   return (
@@ -208,6 +215,12 @@ export default function Referrals() {
           </Table>
         </CardContent>
       </Card>
+
+      <ReferralDetailDialog
+        referral={selectedReferral}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      />
     </div>
   );
 }

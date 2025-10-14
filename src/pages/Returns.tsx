@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/MetricCard";
+import { ReturnDetailDialog } from "@/components/ReturnDetailDialog";
 import { toast } from "sonner";
 
 const mockReturns = [
@@ -62,6 +63,8 @@ export default function Returns() {
   const [returns, setReturns] = useState(mockReturns);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [selectedReturn, setSelectedReturn] = useState<typeof mockReturns[0] | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
   const filteredReturns = returns.filter((returnItem) => {
     const matchesSearch = returnItem.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -85,7 +88,11 @@ export default function Returns() {
   };
 
   const handleView = (id: string) => {
-    toast.info(`Viewing return ${id}`);
+    const returnItem = returns.find(r => r.id === id);
+    if (returnItem) {
+      setSelectedReturn(returnItem);
+      setDetailDialogOpen(true);
+    }
   };
 
   return (
@@ -232,6 +239,14 @@ export default function Returns() {
           </Table>
         </CardContent>
       </Card>
+
+      <ReturnDetailDialog
+        returnItem={selectedReturn}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        onApprove={handleApprove}
+        onReject={handleReject}
+      />
     </div>
   );
 }
