@@ -34,6 +34,16 @@ export default function Vendors() {
     return matchesSearch && matchesFilter;
   });
 
+  // Calculate real metrics
+  const totalVendors = vendors.length;
+  const activeVendors = vendors.filter(v => v.status === "active").length;
+  const avgProducts = vendors.length > 0 
+    ? Math.round(vendors.reduce((sum, v) => sum + (v.total_orders || 0), 0) / vendors.length)
+    : 0;
+  const avgAcceptance = vendors.length > 0
+    ? Math.round(vendors.reduce((sum, v) => sum + (v.acceptance_rate || 0), 0) / vendors.length)
+    : 0;
+
   const handleSaveVendor = (vendor: any) => {
     if (editingVendor) {
       updateVendor(vendor);
@@ -90,25 +100,23 @@ export default function Vendors() {
       <div className="grid gap-4 md:grid-cols-4">
         <MetricCard
           title="Total Vendors"
-          value="24"
+          value={totalVendors}
           icon={Package}
-          trend={{ value: 12, label: "vs last month" }}
         />
         <MetricCard
           title="Active Vendors"
-          value="21"
+          value={activeVendors}
           icon={Users}
         />
         <MetricCard
-          title="Avg Products"
-          value="152"
+          title="Avg Orders"
+          value={avgProducts}
           icon={Package}
         />
         <MetricCard
           title="Avg Acceptance"
-          value="91%"
+          value={`${avgAcceptance}%`}
           icon={TrendingUp}
-          trend={{ value: 3, label: "vs last month" }}
         />
       </div>
 
