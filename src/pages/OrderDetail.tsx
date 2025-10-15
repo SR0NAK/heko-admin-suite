@@ -60,9 +60,16 @@ export default function OrderDetail() {
   }
 
   const handleStatusUpdate = async (newStatus: OrderStatus) => {
+    // Filter out delivery-specific statuses for orders table
+    const orderStatuses = ["placed", "processing", "partially_accepted", "preparing", "out_for_delivery", "delivered", "partially_delivered", "unfulfillable", "canceled", "failed"];
+    if (!orderStatuses.includes(newStatus)) {
+      toast({ title: "Invalid status for order", variant: "destructive" });
+      return;
+    }
+    
     const { error } = await supabase
       .from("orders")
-      .update({ status: newStatus })
+      .update({ status: newStatus as any })
       .eq("id", orderId);
 
     if (error) {

@@ -19,93 +19,36 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-interface HistoryEntry {
-  id: string;
-  type: "delivery" | "pickup";
-  orderId: string;
-  customerName: string;
-  date: string;
-  amount: number;
-  status: "completed" | "cancelled";
-  earnings: number;
-}
-
-const mockHistory: HistoryEntry[] = [
-  {
-    id: "H001",
-    type: "delivery",
-    orderId: "ORD100",
-    customerName: "John Doe",
-    date: "2024-01-14",
-    amount: 1299,
-    status: "completed",
-    earnings: 50,
-  },
-  {
-    id: "H002",
-    type: "pickup",
-    orderId: "RET050",
-    customerName: "Jane Smith",
-    date: "2024-01-14",
-    amount: 599,
-    status: "completed",
-    earnings: 30,
-  },
-  {
-    id: "H003",
-    type: "delivery",
-    orderId: "ORD101",
-    customerName: "Bob Wilson",
-    date: "2024-01-13",
-    amount: 899,
-    status: "completed",
-    earnings: 45,
-  },
-  {
-    id: "H004",
-    type: "delivery",
-    orderId: "ORD102",
-    customerName: "Alice Brown",
-    date: "2024-01-13",
-    amount: 2499,
-    status: "cancelled",
-    earnings: 0,
-  },
-  {
-    id: "H005",
-    type: "pickup",
-    orderId: "RET051",
-    customerName: "Charlie Davis",
-    date: "2024-01-12",
-    amount: 399,
-    status: "completed",
-    earnings: 25,
-  },
-];
-
+import { useDeliveryPartnerDeliveries } from "@/hooks/useDeliveryPartnerDeliveries";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DeliveryHistory() {
-  const [history] = useState(mockHistory);
+  const { allDeliveries, isLoadingAll } = useDeliveryPartnerDeliveries();
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  const filteredHistory = history.filter((entry) => {
+  const filteredHistory = allDeliveries.filter((delivery) => {
     const matchesSearch =
-      entry.orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      entry.customerName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = filterType === "all" || entry.type === filterType;
-    const matchesStatus = filterStatus === "all" || entry.status === filterStatus;
-    return matchesSearch && matchesType && matchesStatus;
+      delivery.orders?.order_number?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || delivery.status === filterStatus;
+    return matchesSearch && matchesStatus;
   });
 
-  const totalEarnings = history
-    .filter((entry) => entry.status === "completed")
-    .reduce((sum, entry) => sum + entry.earnings, 0);
+  const completedDeliveries = allDeliveries.filter((d) => d.status === "delivered");
+  const totalDeliveries = allDeliveries.length;
 
-  const totalDeliveries = history.filter((entry) => entry.type === "delivery").length;
-  const totalPickups = history.filter((entry) => entry.type === "pickup").length;
+  if (isLoadingAll) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-12 w-64" />
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-48" />
+          ))}
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -116,37 +59,39 @@ export default function DeliveryHistory() {
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Deliveries</CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">₹{totalEarnings}</div>
-              <p className="text-xs text-muted-foreground">
-                From completed jobs
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Deliveries</CardTitle>
-              <Truck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalDeliveries}</div>
               <p className="text-xs text-muted-foreground">
-                Total deliveries made
+                All time deliveries
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pickups</CardTitle>
+              <CardTitle className="text-sm font-medium">Completed</CardTitle>
+              <Truck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{completedDeliveries.length}</div>
+              <p className="text-xs text-muted-foreground">
+                Successfully completed
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalPickups}</div>
+              <div className="text-2xl font-bold">
+                {totalDeliveries > 0 ? Math.round((completedDeliveries.length / totalDeliveries) * 100) : 0}%
+              </div>
               <p className="text-xs text-muted-foreground">
-                Total pickups completed
+                Delivery success rate
               </p>
             </CardContent>
           </Card>
@@ -169,17 +114,6 @@ export default function DeliveryHistory() {
                   className="pl-9"
                 />
               </div>
-              <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filter by type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="delivery">Deliveries</SelectItem>
-                  <SelectItem value="pickup">Pickups</SelectItem>
-                </SelectContent>
-              </Select>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <Filter className="h-4 w-4 mr-2" />
@@ -187,8 +121,12 @@ export default function DeliveryHistory() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="delivered">Delivered</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                  <SelectItem value="assigned">Assigned</SelectItem>
+                  <SelectItem value="accepted">Accepted</SelectItem>
+                  <SelectItem value="picked">Picked</SelectItem>
+                  <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -198,53 +136,38 @@ export default function DeliveryHistory() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Type</TableHead>
                     <TableHead>Order ID</TableHead>
-                    <TableHead>Customer</TableHead>
+                    <TableHead>Vendor</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Earnings</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredHistory.length > 0 ? (
-                    filteredHistory.map((entry) => (
-                      <TableRow key={entry.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {entry.type === "delivery" ? (
-                              <Truck className="h-4 w-4 text-blue-500" />
-                            ) : (
-                              <Package className="h-4 w-4 text-orange-500" />
-                            )}
-                            <span className="capitalize">{entry.type}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium">{entry.orderId}</TableCell>
-                        <TableCell>{entry.customerName}</TableCell>
+                    filteredHistory.map((delivery) => (
+                      <TableRow key={delivery.id}>
+                        <TableCell className="font-medium">{delivery.orders?.order_number}</TableCell>
+                        <TableCell>{delivery.vendors?.business_name}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
-                            {entry.date}
+                            {new Date(delivery.created_at).toLocaleDateString()}
                           </div>
                         </TableCell>
-                        <TableCell>₹{entry.amount}</TableCell>
+                        <TableCell>₹{delivery.orders?.total || 0}</TableCell>
                         <TableCell>
                           <Badge
-                            variant={entry.status === "completed" ? "default" : "destructive"}
+                            variant={delivery.status === "delivered" ? "default" : "secondary"}
                           >
-                            {entry.status}
+                            {delivery.status}
                           </Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          ₹{entry.earnings}
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                         No records found
                       </TableCell>
                     </TableRow>

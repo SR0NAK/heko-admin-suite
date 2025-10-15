@@ -11,7 +11,10 @@ export type OrderStatus =
   | "partially_delivered"
   | "unfulfillable"
   | "canceled"
-  | "failed";
+  | "failed"
+  | "assigned"
+  | "accepted"
+  | "picked";
 
 interface StatusBadgeProps {
   status: OrderStatus;
@@ -61,6 +64,18 @@ const statusConfig: Record<
   failed: {
     label: "Failed",
     className: "bg-[hsl(var(--status-failed))] text-white hover:bg-[hsl(var(--status-failed))]",
+  },
+  assigned: {
+    label: "Assigned",
+    className: "bg-[hsl(var(--status-pending))] text-white hover:bg-[hsl(var(--status-pending))]",
+  },
+  accepted: {
+    label: "Accepted",
+    className: "bg-[hsl(var(--status-processing))] text-white hover:bg-[hsl(var(--status-processing))]",
+  },
+  picked: {
+    label: "Picked Up",
+    className: "bg-[hsl(var(--status-processing))] text-white hover:bg-[hsl(var(--status-processing))]",
   },
 };
 

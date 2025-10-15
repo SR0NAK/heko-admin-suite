@@ -12,91 +12,37 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-interface TaskPayout {
-  id: string;
-  type: "delivery" | "pickup";
-  orderId: string;
-  date: string;
-  amount: number;
-  bonus?: number;
-  status: "settled" | "pending";
-}
-
-const mockTodayPayouts: TaskPayout[] = [
-  {
-    id: "T001",
-    type: "delivery",
-    orderId: "ORD123",
-    date: "2024-01-15 10:30",
-    amount: 50,
-    bonus: 10,
-    status: "settled",
-  },
-  {
-    id: "T002",
-    type: "pickup",
-    orderId: "RET045",
-    date: "2024-01-15 11:45",
-    amount: 30,
-    status: "settled",
-  },
-  {
-    id: "T003",
-    type: "delivery",
-    orderId: "ORD124",
-    date: "2024-01-15 14:20",
-    amount: 45,
-    bonus: 5,
-    status: "pending",
-  },
-];
-
-const mockWeekPayouts: TaskPayout[] = [
-  ...mockTodayPayouts,
-  {
-    id: "T004",
-    type: "delivery",
-    orderId: "ORD120",
-    date: "2024-01-14 09:15",
-    amount: 50,
-    status: "settled",
-  },
-  {
-    id: "T005",
-    type: "pickup",
-    orderId: "RET044",
-    date: "2024-01-14 16:30",
-    amount: 30,
-    bonus: 15,
-    status: "settled",
-  },
-  {
-    id: "T006",
-    type: "delivery",
-    orderId: "ORD119",
-    date: "2024-01-13 11:00",
-    amount: 45,
-    status: "settled",
-  },
-];
+import { useDeliveryPartnerDeliveries } from "@/hooks/useDeliveryPartnerDeliveries";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DeliveryEarnings() {
   const [activeTab, setActiveTab] = useState("today");
+  const { allDeliveries, isLoadingAll, partnerProfile } = useDeliveryPartnerDeliveries();
 
-  const todayTotal = mockTodayPayouts.reduce((sum, task) => sum + task.amount + (task.bonus || 0), 0);
-  const todayBonus = mockTodayPayouts.reduce((sum, task) => sum + (task.bonus || 0), 0);
-  const weekTotal = mockWeekPayouts.reduce((sum, task) => sum + task.amount + (task.bonus || 0), 0);
-  const weekBonus = mockWeekPayouts.reduce((sum, task) => sum + (task.bonus || 0), 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const todayDeliveries = allDeliveries.filter(d => {
+    const deliveryDate = new Date(d.created_at);
+    deliveryDate.setHours(0, 0, 0, 0);
+    return deliveryDate.getTime() === today.getTime();
+  });
 
-  const todayTrips = mockTodayPayouts.length;
-  const weekTrips = mockWeekPayouts.length;
-  const onTimeRate = 95;
-  const successRate = 98;
+  const completedToday = todayDeliveries.filter(d => d.status === "delivered");
+  const completedAll = allDeliveries.filter(d => d.status === "delivered");
 
-  const pendingSettlement = mockTodayPayouts
-    .filter((t) => t.status === "pending")
-    .reduce((sum, task) => sum + task.amount + (task.bonus || 0), 0);
+  if (isLoadingAll) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-12 w-64" />
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-48" />
+          ))}
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -107,52 +53,52 @@ export default function DeliveryEarnings() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Today's Earnings</CardTitle>
+              <CardTitle className="text-sm font-medium">Today's Deliveries</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">₹{todayTotal}</div>
+              <div className="text-2xl font-bold">{completedToday.length}</div>
               <p className="text-xs text-muted-foreground">
-                +₹{todayBonus} in bonuses
+                Completed today
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Week's Earnings</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Deliveries</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">₹{weekTotal}</div>
+              <div className="text-2xl font-bold">{completedAll.length}</div>
               <p className="text-xs text-muted-foreground">
-                +₹{weekBonus} in bonuses
+                All time completed
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Settlement</CardTitle>
+              <CardTitle className="text-sm font-medium">Rating</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">₹{pendingSettlement}</div>
+              <div className="text-2xl font-bold">{partnerProfile?.rating || 0}</div>
               <p className="text-xs text-muted-foreground">
-                Settles in 24 hours
+                Average rating
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Trips</CardTitle>
+              <CardTitle className="text-sm font-medium">Active Orders</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{weekTrips}</div>
+              <div className="text-2xl font-bold">{partnerProfile?.active_deliveries || 0}</div>
               <p className="text-xs text-muted-foreground">
-                {todayTrips} today
+                Currently active
               </p>
             </CardContent>
           </Card>
@@ -162,26 +108,30 @@ export default function DeliveryEarnings() {
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">On-Time Rate</CardTitle>
+              <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{onTimeRate}%</div>
+              <div className="text-2xl font-bold">
+                {allDeliveries.length > 0 ? Math.round((completedAll.length / allDeliveries.length) * 100) : 0}%
+              </div>
               <p className="text-xs text-muted-foreground">
-                Excellent performance
+                Delivery success rate
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+              <CardTitle className="text-sm font-medium">Today's Rate</CardTitle>
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{successRate}%</div>
+              <div className="text-2xl font-bold">
+                {todayDeliveries.length > 0 ? Math.round((completedToday.length / todayDeliveries.length) * 100) : 0}%
+              </div>
               <p className="text-xs text-muted-foreground">
-                Keep up the great work!
+                Today's completion rate
               </p>
             </CardContent>
           </Card>
@@ -205,42 +155,35 @@ export default function DeliveryEarnings() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Type</TableHead>
                         <TableHead>Order ID</TableHead>
+                        <TableHead>Vendor</TableHead>
                         <TableHead>Time</TableHead>
-                        <TableHead>Base Amount</TableHead>
-                        <TableHead>Bonus</TableHead>
+                        <TableHead>Amount</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Total</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {mockTodayPayouts.map((task) => (
-                        <TableRow key={task.id}>
-                          <TableCell className="capitalize">{task.type}</TableCell>
-                          <TableCell className="font-medium">{task.orderId}</TableCell>
-                          <TableCell>{task.date}</TableCell>
-                          <TableCell>₹{task.amount}</TableCell>
-                          <TableCell>
-                            {task.bonus ? (
-                              <div className="flex items-center gap-1">
-                                <Award className="h-3 w-3 text-amber-500" />
-                                ₹{task.bonus}
-                              </div>
-                            ) : (
-                              "-"
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={task.status === "settled" ? "default" : "secondary"}>
-                              {task.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            ₹{task.amount + (task.bonus || 0)}
+                      {todayDeliveries.length > 0 ? (
+                        todayDeliveries.map((delivery) => (
+                          <TableRow key={delivery.id}>
+                            <TableCell className="font-medium">{delivery.orders?.order_number}</TableCell>
+                            <TableCell>{delivery.vendors?.business_name}</TableCell>
+                            <TableCell>{new Date(delivery.created_at).toLocaleTimeString()}</TableCell>
+                            <TableCell>₹{delivery.orders?.total || 0}</TableCell>
+                            <TableCell>
+                              <Badge variant={delivery.status === "delivered" ? "default" : "secondary"}>
+                                {delivery.status}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                            No deliveries today
                           </TableCell>
                         </TableRow>
-                      ))}
+                      )}
                     </TableBody>
                   </Table>
                 </div>
@@ -251,42 +194,35 @@ export default function DeliveryEarnings() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Type</TableHead>
                         <TableHead>Order ID</TableHead>
+                        <TableHead>Vendor</TableHead>
                         <TableHead>Date & Time</TableHead>
-                        <TableHead>Base Amount</TableHead>
-                        <TableHead>Bonus</TableHead>
+                        <TableHead>Amount</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Total</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {mockWeekPayouts.map((task) => (
-                        <TableRow key={task.id}>
-                          <TableCell className="capitalize">{task.type}</TableCell>
-                          <TableCell className="font-medium">{task.orderId}</TableCell>
-                          <TableCell>{task.date}</TableCell>
-                          <TableCell>₹{task.amount}</TableCell>
-                          <TableCell>
-                            {task.bonus ? (
-                              <div className="flex items-center gap-1">
-                                <Award className="h-3 w-3 text-amber-500" />
-                                ₹{task.bonus}
-                              </div>
-                            ) : (
-                              "-"
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={task.status === "settled" ? "default" : "secondary"}>
-                              {task.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            ₹{task.amount + (task.bonus || 0)}
+                      {completedAll.length > 0 ? (
+                        completedAll.slice(0, 20).map((delivery) => (
+                          <TableRow key={delivery.id}>
+                            <TableCell className="font-medium">{delivery.orders?.order_number}</TableCell>
+                            <TableCell>{delivery.vendors?.business_name}</TableCell>
+                            <TableCell>{new Date(delivery.created_at).toLocaleString()}</TableCell>
+                            <TableCell>₹{delivery.orders?.total || 0}</TableCell>
+                            <TableCell>
+                              <Badge variant="default">
+                                {delivery.status}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                            No completed deliveries
                           </TableCell>
                         </TableRow>
-                      ))}
+                      )}
                     </TableBody>
                   </Table>
                 </div>
