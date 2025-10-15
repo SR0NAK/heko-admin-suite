@@ -11,9 +11,10 @@ interface Banner {
   title: string;
   subtitle: string;
   image: string;
-  action: string;
+  action_type: string;
+  action_value: string;
   active: boolean;
-  order: number;
+  display_order: number;
 }
 
 interface BannerFormProps {
@@ -29,9 +30,10 @@ export function BannerForm({ open, onOpenChange, banner, onSave }: BannerFormPro
     title: '',
     subtitle: '',
     image: '/placeholder.svg',
-    action: '',
+    action_type: '',
+    action_value: '',
     active: true,
-    order: 0,
+    display_order: 0,
   });
   const [imagePreview, setImagePreview] = useState<string>('/placeholder.svg');
 
@@ -45,9 +47,10 @@ export function BannerForm({ open, onOpenChange, banner, onSave }: BannerFormPro
         title: '',
         subtitle: '',
         image: '/placeholder.svg',
-        action: '',
+        action_type: '',
+        action_value: '',
         active: true,
-        order: 0,
+        display_order: 0,
       });
       setImagePreview('/placeholder.svg');
     }
@@ -119,22 +122,32 @@ export function BannerForm({ open, onOpenChange, banner, onSave }: BannerFormPro
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="action">Action/Link</Label>
+            <Label htmlFor="action_type">Action Type</Label>
             <Input
-              id="action"
-              placeholder="e.g., /category/fruits"
-              value={formData.action}
-              onChange={(e) => setFormData({ ...formData, action: e.target.value })}
+              id="action_type"
+              placeholder="e.g., category, product"
+              value={formData.action_type}
+              onChange={(e) => setFormData({ ...formData, action_type: e.target.value })}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="order">Display Order</Label>
+            <Label htmlFor="action_value">Action Value</Label>
             <Input
-              id="order"
+              id="action_value"
+              placeholder="e.g., fruits, product-id"
+              value={formData.action_value}
+              onChange={(e) => setFormData({ ...formData, action_value: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="display_order">Display Order</Label>
+            <Input
+              id="display_order"
               type="number"
-              value={formData.order}
-              onChange={(e) => setFormData({ ...formData, order: Number(e.target.value) })}
+              value={formData.display_order}
+              onChange={(e) => setFormData({ ...formData, display_order: Number(e.target.value) })}
             />
           </div>
 

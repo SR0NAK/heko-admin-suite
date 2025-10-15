@@ -8,10 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface Subcategory {
   id: string;
   name: string;
-  categoryId: string;
-  categoryName: string;
-  productsCount: number;
-  order: number;
+  category_id: string;
+  active: boolean;
 }
 
 interface SubcategoryFormProps {
@@ -26,10 +24,8 @@ export function SubcategoryForm({ open, onOpenChange, subcategory, onSave, categ
   const [formData, setFormData] = useState<Subcategory>({
     id: '',
     name: '',
-    categoryId: '',
-    categoryName: '',
-    productsCount: 0,
-    order: 0,
+    category_id: '',
+    active: true,
   });
 
   useEffect(() => {
@@ -39,23 +35,15 @@ export function SubcategoryForm({ open, onOpenChange, subcategory, onSave, categ
       setFormData({
         id: '',
         name: '',
-        categoryId: '',
-        categoryName: '',
-        productsCount: 0,
-        order: 0,
+        category_id: '',
+        active: true,
       });
     }
   }, [subcategory, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const selectedCategory = categories.find(c => c.id === formData.categoryId);
-    const subcategoryToSave = {
-      ...formData,
-      id: formData.id || `SC${Date.now()}`,
-      categoryName: selectedCategory?.name || formData.categoryName,
-    };
-    onSave(subcategoryToSave);
+    onSave(formData);
     onOpenChange(false);
   };
 
@@ -79,8 +67,8 @@ export function SubcategoryForm({ open, onOpenChange, subcategory, onSave, categ
           <div className="space-y-2">
             <Label htmlFor="category">Category *</Label>
             <Select
-              value={formData.categoryId}
-              onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
+              value={formData.category_id}
+              onValueChange={(value) => setFormData({ ...formData, category_id: value })}
               required
             >
               <SelectTrigger>
@@ -94,16 +82,6 @@ export function SubcategoryForm({ open, onOpenChange, subcategory, onSave, categ
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="order">Display Order</Label>
-            <Input
-              id="order"
-              type="number"
-              value={formData.order}
-              onChange={(e) => setFormData({ ...formData, order: Number(e.target.value) })}
-            />
           </div>
 
           <DialogFooter>
