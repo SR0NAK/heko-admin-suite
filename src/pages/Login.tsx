@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { ShoppingBag } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { loginSchema, signupSchema } from "@/lib/authSchemas";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -29,6 +30,18 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    // Validate input
+    const validation = loginSchema.safeParse({ email, password });
+    if (!validation.success) {
+      toast({
+        title: "Validation failed",
+        description: validation.error.errors[0].message,
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
 
     const { error } = await signIn(email, password);
 
@@ -51,6 +64,18 @@ export default function Login() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    // Validate input
+    const validation = signupSchema.safeParse({ email, password, name, phone });
+    if (!validation.success) {
+      toast({
+        title: "Validation failed",
+        description: validation.error.errors[0].message,
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
 
     const { error } = await signUp(email, password, name, phone);
 

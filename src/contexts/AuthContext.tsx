@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { signupSchema } from "@/lib/authSchemas";
 
 interface AuthContextType {
   user: User | null;
@@ -55,14 +56,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, name: string, phone: string) => {
     try {
+      // Validate input before sending to Supabase
+      const validation = signupSchema.safeParse({ email, password, name, phone });
+      if (!validation.success) {
+        return { error: new Error(validation.error.errors[0].message) };
+      }
+
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
-            name,
-            phone,
+            name: name.trim(),
+            phone: phone.trim(),
           },
         },
       });
@@ -75,9 +82,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .from("profiles")
           .upsert({
             id: data.user.id,
-            name,
-            phone,
-            email,
+            name: name.trim(),
+            phone: phone.trim(),
+            email: email.trim(),
             referral_code: data.user.id.substring(0, 8).toUpperCase(),
           });
 
@@ -108,8 +115,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("admin_email");
   };
 
   return (

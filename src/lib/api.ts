@@ -1,17 +1,23 @@
 // API Configuration and Service Layer
-// Replace BASE_URL with your actual backend URL
+// DEPRECATED: This legacy API service is no longer used.
+// All API calls should use the Supabase client from @/integrations/supabase/client
+// This file is kept for reference only and should not be used in production.
+
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 class ApiService {
-  private getAuthToken(): string | null {
-    return localStorage.getItem('admin_token');
+  private async getAuthToken(): Promise<string | null> {
+    // Use Supabase session token instead of localStorage
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || null;
   }
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const token = this.getAuthToken();
+    const token = await this.getAuthToken();
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
