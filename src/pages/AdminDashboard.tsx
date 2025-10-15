@@ -176,9 +176,16 @@ export default function AdminDashboard() {
               {metrics?.recentOrders.map((order: any) => (
                 <TableRow key={order.id}>
                   <TableCell className="font-medium">{order.order_number}</TableCell>
-                  <TableCell>{order.profiles?.name || "N/A"}</TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">Customer</div>
+                      <div className="text-sm text-muted-foreground">
+                        {new Date(order.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </TableCell>
                   <TableCell>-</TableCell>
-                  <TableCell>{order.order_items?.length || 0}</TableCell>
+                  <TableCell>- items</TableCell>
                   <TableCell className="font-semibold">₹{order.total}</TableCell>
                   <TableCell>
                     <StatusBadge status={order.status} />

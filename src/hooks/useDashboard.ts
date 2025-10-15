@@ -14,14 +14,10 @@ export const useDashboard = () => {
         supabase.from("returns").select("*", { count: "exact", head: true }).eq("status", "requested"),
       ]);
 
-      // Fetch recent orders with details
+      // Fetch recent orders - simplified to avoid recursion issues
       const { data: recentOrders, error: ordersError } = await supabase
         .from("orders")
-        .select(`
-          *,
-          profiles(name),
-          order_items(product_name, quantity)
-        `)
+        .select("*")
         .order("created_at", { ascending: false })
         .limit(5);
 
