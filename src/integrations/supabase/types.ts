@@ -212,7 +212,7 @@ export type Database = {
           rating: number | null
           status: Database["public"]["Enums"]["user_status"] | null
           updated_at: string
-          user_id: string
+          user_id: string | null
           vehicle_number: string | null
           vehicle_type: string | null
         }
@@ -229,7 +229,7 @@ export type Database = {
           rating?: number | null
           status?: Database["public"]["Enums"]["user_status"] | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           vehicle_number?: string | null
           vehicle_type?: string | null
         }
@@ -246,7 +246,7 @@ export type Database = {
           rating?: number | null
           status?: Database["public"]["Enums"]["user_status"] | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           vehicle_number?: string | null
           vehicle_type?: string | null
         }
@@ -882,7 +882,7 @@ export type Database = {
           status: Database["public"]["Enums"]["user_status"] | null
           total_orders: number | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           acceptance_rate?: number | null
@@ -901,7 +901,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["user_status"] | null
           total_orders?: number | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           acceptance_rate?: number | null
@@ -920,7 +920,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["user_status"] | null
           total_orders?: number | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
