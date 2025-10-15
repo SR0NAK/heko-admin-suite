@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export type UserRole = "admin" | "vendor" | "delivery_partner" | "user";
+export type UserRole = "admin" | "vendor" | "delivery_partner";
 
 interface RoleSwitcherProps {
   currentRole: UserRole;
@@ -29,11 +29,6 @@ const roleConfig: Record<UserRole, { label: string; icon: any; description: stri
     label: "Delivery Partner",
     icon: Truck,
     description: "Courier Workspace",
-  },
-  user: {
-    label: "Customer",
-    icon: Building2,
-    description: "Customer Portal",
   },
 };
 
