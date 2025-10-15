@@ -71,11 +71,10 @@ export function BannerForm({ open, onOpenChange, banner, onSave }: BannerFormPro
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const bannerToSave = {
-      ...formData,
-      id: formData.id || `B${Date.now()}`,
-    };
-    onSave(bannerToSave);
+    // Remove id for new banners, let database generate UUID
+    const { id, ...bannerData } = formData;
+    const bannerToSave = banner ? { ...bannerData, id } : bannerData;
+    onSave(bannerToSave as Banner);
     onOpenChange(false);
   };
 

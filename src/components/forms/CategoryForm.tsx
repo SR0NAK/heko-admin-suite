@@ -61,7 +61,10 @@ export function CategoryForm({ open, onOpenChange, category, onSave }: CategoryF
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    // Remove id for new categories, let database generate UUID
+    const { id, ...categoryData } = formData;
+    const categoryToSave = category ? { ...categoryData, id } : categoryData;
+    onSave(categoryToSave as Category);
     onOpenChange(false);
   };
 
