@@ -14,58 +14,23 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/MetricCard";
 import { ReferralDetailDialog } from "@/components/ReferralDetailDialog";
+import { useReferrals } from "@/hooks/useReferrals";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
-const mockReferrals = [
-  {
-    id: "1",
-    referrer: "Rajesh Kumar (RAJ123)",
-    referee: "Priya Sharma",
-    orderValue: 450,
-    rewardEarned: 45,
-    status: "converted",
-    date: "2024-01-25",
-  },
-  {
-    id: "2",
-    referrer: "Amit Patel (AMI789)",
-    referee: "Neha Singh",
-    orderValue: 620,
-    rewardEarned: 62,
-    status: "converted",
-    date: "2024-01-24",
-  },
-  {
-    id: "3",
-    referrer: "Suresh Kumar (SUR456)",
-    referee: "Rahul Verma",
-    orderValue: 0,
-    rewardEarned: 0,
-    status: "pending",
-    date: "2024-01-23",
-  },
-  {
-    id: "4",
-    referrer: "Priya Sharma (PRI456)",
-    referee: "Deepak Kumar",
-    orderValue: 380,
-    rewardEarned: 0,
-    status: "insufficient_balance",
-    date: "2024-01-22",
-  },
-];
-
 export default function Referrals() {
-  const [referrals, setReferrals] = useState(mockReferrals);
+  const { referrals, isLoading } = useReferrals();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [selectedReferral, setSelectedReferral] = useState<typeof mockReferrals[0] | null>(null);
+  const [selectedReferral, setSelectedReferral] = useState<any>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
   const filteredReferrals = referrals.filter((referral) => {
-    const matchesSearch = referral.referrer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      referral.referee.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filterStatus === "all" || referral.status === filterStatus;
+    const referrerName = referral.referrer?.name || "";
+    const refereeName = referral.referee?.name || "";
+    const matchesSearch = referrerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      refereeName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = filterStatus === "all" || (filterStatus === "converted" ? referral.converted : !referral.converted);
     return matchesSearch && matchesFilter;
   });
 
@@ -80,6 +45,19 @@ export default function Referrals() {
       setDetailDialogOpen(true);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-12 w-64" />
+        <div className="grid gap-4 md:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -96,24 +74,22 @@ export default function Referrals() {
       <div className="grid gap-4 md:grid-cols-4">
         <MetricCard
           title="Total Referrals"
-          value="1,234"
+          value={referrals.length.toString()}
           icon={Users}
-          trend={{ value: 18, label: "vs last month" }}
         />
         <MetricCard
           title="Conversions"
-          value="856"
+          value={referrals.filter(r => r.converted).length.toString()}
           icon={CheckCircle}
-          trend={{ value: 12, label: "conversion rate" }}
         />
         <MetricCard
           title="Rewards Paid"
-          value="₹42,380"
+          value={`₹${referrals.filter(r => r.converted).reduce((sum, r) => sum + (r.reward_amount || 0), 0).toFixed(0)}`}
           icon={Wallet}
         />
         <MetricCard
           title="Pending"
-          value="378"
+          value={referrals.filter(r => !r.converted).length.toString()}
           icon={TrendingUp}
         />
       </div>
@@ -172,36 +148,36 @@ export default function Referrals() {
             <TableBody>
               {filteredReferrals.map((referral) => (
                 <TableRow key={referral.id}>
-                  <TableCell>{referral.date}</TableCell>
+                  <TableCell>{new Date(referral.created_at).toLocaleDateString()}</TableCell>
                   <TableCell className="font-medium">
-                    {referral.referrer}
+                    {referral.referrer?.name || "N/A"}
                   </TableCell>
-                  <TableCell>{referral.referee}</TableCell>
+                  <TableCell>{referral.referee?.name || "N/A"}</TableCell>
                   <TableCell>
-                    {referral.orderValue > 0
-                      ? `₹${referral.orderValue}`
+                    {referral.order_value > 0
+                      ? `₹${referral.order_value}`
                       : "-"}
                   </TableCell>
                   <TableCell>
-                    {referral.rewardEarned > 0
-                      ? `₹${referral.rewardEarned}`
+                    {referral.reward_amount > 0 && referral.converted
+                      ? `₹${referral.reward_amount}`
                       : "-"}
                   </TableCell>
                   <TableCell>
                     <Badge
                       variant={
-                        referral.status === "converted"
+                        referral.converted
                           ? "default"
-                          : referral.status === "pending"
-                          ? "secondary"
-                          : "destructive"
+                          : referral.failure_reason
+                          ? "destructive"
+                          : "secondary"
                       }
                     >
-                      {referral.status === "converted"
+                      {referral.converted
                         ? "Converted"
-                        : referral.status === "pending"
-                        ? "Pending"
-                        : "Insufficient Balance"}
+                        : referral.failure_reason
+                        ? "Failed"
+                        : "Pending"}
                     </Badge>
                   </TableCell>
                   <TableCell>

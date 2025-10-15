@@ -1,21 +1,60 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Phone, Mail, User, Wallet, MapPin, Users } from "lucide-react";
-import { mockUsers, mockOrders, mockWalletTransactions } from "@/lib/mockData";
+import { ArrowLeft, Phone, Mail, User, Wallet, Users } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 export default function UserDetail() {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [user, setUser] = useState<any>(null);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  const user = mockUsers.find(u => u.id === userId);
-  const userOrders = mockOrders.filter(o => o.userId === userId);
-  const userTransactions = mockWalletTransactions.filter(t => t.userId === userId);
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const [userRes, ordersRes, transactionsRes] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", userId).single(),
+        supabase.from("orders").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+        supabase.from("wallet_transactions").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+      ]);
+
+      if (userRes.error) {
+        toast({ title: "Error", description: userRes.error.message, variant: "destructive" });
+      } else {
+        setUser(userRes.data);
+      }
+
+      if (!ordersRes.error) setOrders(ordersRes.data || []);
+      if (!transactionsRes.error) setTransactions(transactionsRes.data || []);
+      
+      setIsLoading(false);
+    };
+
+    fetchUserData();
+  }, [userId, toast]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-12 w-64" />
+        <div className="grid gap-6 md:grid-cols-3">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return <div>User not found</div>;
@@ -45,7 +84,7 @@ export default function UserDetail() {
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{user.virtualWallet}</div>
+            <div className="text-2xl font-bold">₹{user.virtual_wallet}</div>
           </CardContent>
         </Card>
 
@@ -55,7 +94,7 @@ export default function UserDetail() {
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{user.actualWallet}</div>
+            <div className="text-2xl font-bold">₹{user.actual_wallet}</div>
           </CardContent>
         </Card>
 
@@ -65,7 +104,7 @@ export default function UserDetail() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{user.totalOrders}</div>
+            <div className="text-2xl font-bold">{orders.length}</div>
           </CardContent>
         </Card>
       </div>
@@ -109,15 +148,15 @@ export default function UserDetail() {
                 <Users className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Referral Code</p>
-                  <p className="font-medium">{user.referralCode}</p>
+                  <p className="font-medium">{user.referral_code}</p>
                 </div>
               </div>
-              {user.referredBy && (
+              {user.referred_by && (
                 <div className="flex items-center gap-3">
                   <Users className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-sm text-muted-foreground">Referred By</p>
-                    <p className="font-medium">{user.referredBy}</p>
+                    <p className="font-medium">{user.referred_by}</p>
                   </div>
                 </div>
               )}
@@ -142,11 +181,11 @@ export default function UserDetail() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {userOrders.map((order) => (
+                  {orders.map((order: any) => (
                     <TableRow key={order.id}>
-                      <TableCell className="font-medium">{order.id}</TableCell>
-                      <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell>{order.items.length} items</TableCell>
+                      <TableCell className="font-medium">{order.order_number}</TableCell>
+                      <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>- items</TableCell>
                       <TableCell>₹{order.total}</TableCell>
                       <TableCell>
                         <StatusBadge status={order.status} />
@@ -177,18 +216,18 @@ export default function UserDetail() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {userTransactions.map((transaction) => (
+                  {transactions.map((transaction: any) => (
                     <TableRow key={transaction.id}>
-                      <TableCell>{new Date(transaction.timestamp).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(transaction.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>
-                        <Badge variant={transaction.type === 'credit' ? 'default' : 'destructive'}>
-                          {transaction.type}
+                        <Badge variant={transaction.transaction_type === "credit" ? "default" : "destructive"}>
+                          {transaction.transaction_type}
                         </Badge>
                       </TableCell>
-                      <TableCell>{transaction.walletType}</TableCell>
+                      <TableCell>{transaction.wallet_type}</TableCell>
                       <TableCell>₹{transaction.amount}</TableCell>
                       <TableCell>{transaction.description}</TableCell>
-                      <TableCell>₹{transaction.balanceAfter}</TableCell>
+                      <TableCell>₹{transaction.balance_after}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

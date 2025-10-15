@@ -1,23 +1,58 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Save } from "lucide-react";
-import { mockSettings } from "@/lib/mockData";
+import { useSettings } from "@/hooks/useSettings";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Settings() {
-  const [settings, setSettings] = useState(mockSettings);
+  const { settings: dbSettings, isLoading, updateSetting } = useSettings();
   const { toast } = useToast();
+  const [settings, setSettings] = useState({
+    deliveryFee: 0,
+    minOrderValue: 0,
+    cashbackPercentage: 100,
+    referralRewardPercentage: 10,
+    serviceRadius: 5,
+    businessHours: { start: "09:00", end: "21:00" },
+  });
+
+  useEffect(() => {
+    if (dbSettings) {
+      setSettings({
+        deliveryFee: dbSettings.delivery_fee || 0,
+        minOrderValue: dbSettings.min_order_value || 0,
+        cashbackPercentage: dbSettings.cashback_percentage || 100,
+        referralRewardPercentage: dbSettings.referral_reward_percentage || 10,
+        serviceRadius: dbSettings.service_radius || 5,
+        businessHours: dbSettings.business_hours || { start: "09:00", end: "21:00" },
+      });
+    }
+  }, [dbSettings]);
 
   const handleSave = () => {
-    toast({
-      title: "Settings saved",
-      description: "Your changes have been saved successfully",
-    });
+    updateSetting({ key: "delivery_fee", value: settings.deliveryFee });
+    updateSetting({ key: "min_order_value", value: settings.minOrderValue });
+    updateSetting({ key: "cashback_percentage", value: settings.cashbackPercentage });
+    updateSetting({ key: "referral_reward_percentage", value: settings.referralRewardPercentage });
+    updateSetting({ key: "service_radius", value: settings.serviceRadius });
+    updateSetting({ key: "business_hours", value: settings.businessHours });
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-12 w-64" />
+        {[...Array(3)].map((_, i) => (
+          <Skeleton key={i} className="h-48" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

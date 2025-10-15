@@ -14,74 +14,21 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/MetricCard";
 import { ReturnDetailDialog } from "@/components/ReturnDetailDialog";
+import { useReturns } from "@/hooks/useReturns";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
-const mockReturns = [
-  {
-    id: "RET-001",
-    orderId: "ORD-245",
-    customer: "Rajesh Kumar",
-    items: [{ name: "Organic Apples", quantity: 1, price: 180 }],
-    reason: "Damaged product",
-    status: "pending",
-    amount: 180,
-    date: "2024-01-26",
-    pickupOtp: null,
-    pickupStatus: null,
-    deliveryPartnerId: null,
-  },
-  {
-    id: "RET-002",
-    orderId: "ORD-238",
-    customer: "Priya Sharma",
-    items: [{ name: "Fresh Milk", quantity: 2, price: 60 }],
-    reason: "Wrong item delivered",
-    status: "approved",
-    amount: 120,
-    date: "2024-01-25",
-    pickupOtp: "3456",
-    pickupStatus: "scheduled",
-    deliveryPartnerId: "DP-003",
-  },
-  {
-    id: "RET-003",
-    orderId: "ORD-231",
-    customer: "Amit Patel",
-    items: [{ name: "Tomatoes", quantity: 1, price: 30 }],
-    reason: "Not fresh",
-    status: "pickup_scheduled",
-    amount: 30,
-    date: "2024-01-25",
-    pickupOtp: "7890",
-    pickupStatus: "out_for_pickup",
-    deliveryPartnerId: "DP-001",
-  },
-  {
-    id: "RET-004",
-    orderId: "ORD-224",
-    customer: "Neha Singh",
-    items: [{ name: "Bread", quantity: 2, price: 30 }],
-    reason: "Quality issue",
-    status: "completed",
-    amount: 60,
-    date: "2024-01-24",
-    pickupOtp: null,
-    pickupStatus: "completed",
-    deliveryPartnerId: "DP-002",
-  },
-];
-
 export default function Returns() {
-  const [returns, setReturns] = useState(mockReturns);
+  const { returns, isLoading, updateReturnStatus } = useReturns();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [selectedReturn, setSelectedReturn] = useState<typeof mockReturns[0] | null>(null);
+  const [selectedReturn, setSelectedReturn] = useState<any>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
   const filteredReturns = returns.filter((returnItem) => {
     const matchesSearch = returnItem.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      returnItem.orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      returnItem.customer.toLowerCase().includes(searchQuery.toLowerCase());
+      (returnItem.orders?.order_number && returnItem.orders.order_number.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (returnItem.profiles?.name && returnItem.profiles.name.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesFilter = filterStatus === "all" || returnItem.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
@@ -91,12 +38,11 @@ export default function Returns() {
   };
 
   const handleApprove = (id: string) => {
-    setReturns(returns.map(r => r.id === id ? { ...r, status: "approved" } : r));
-    toast.success(`Return ${id} approved`);
+    updateReturnStatus({ returnId: id, status: "approved" });
   };
 
   const handleReject = (id: string) => {
-    toast.error(`Return ${id} rejected`);
+    updateReturnStatus({ returnId: id, status: "rejected" });
   };
 
   const handleView = (id: string) => {
@@ -106,6 +52,19 @@ export default function Returns() {
       setDetailDialogOpen(true);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-12 w-64" />
+        <div className="grid gap-4 md:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -122,22 +81,22 @@ export default function Returns() {
       <div className="grid gap-4 md:grid-cols-4">
         <MetricCard
           title="Pending Approval"
-          value="12"
+          value={returns.filter(r => r.status === "requested").length.toString()}
           icon={Clock}
         />
         <MetricCard
           title="Pickup Scheduled"
-          value="8"
+          value={returns.filter(r => r.status === "pickup_scheduled").length.toString()}
           icon={Package}
         />
         <MetricCard
-          title="Completed Today"
-          value="15"
+          title="Completed"
+          value={returns.filter(r => r.status === "completed").length.toString()}
           icon={CheckCircle}
         />
         <MetricCard
           title="Total Refunded"
-          value="₹12,450"
+          value={`₹${returns.filter(r => r.status === "completed").reduce((sum, r) => sum + (r.refund_amount || 0), 0).toFixed(0)}`}
           icon={XCircle}
         />
       </div>
@@ -198,14 +157,14 @@ export default function Returns() {
               {filteredReturns.map((returnItem) => (
                 <TableRow key={returnItem.id}>
                   <TableCell className="font-medium">
-                    {returnItem.id}
+                    {returnItem.id.slice(0, 8)}
                   </TableCell>
-                  <TableCell>{returnItem.orderId}</TableCell>
-                  <TableCell>{returnItem.customer}</TableCell>
-                  <TableCell>{returnItem.items.length} item(s)</TableCell>
+                  <TableCell>{returnItem.orders?.order_number || "N/A"}</TableCell>
+                  <TableCell>{returnItem.profiles?.name || "N/A"}</TableCell>
+                  <TableCell>-</TableCell>
                   <TableCell>{returnItem.reason}</TableCell>
-                  <TableCell>₹{returnItem.amount}</TableCell>
-                  <TableCell>{returnItem.date}</TableCell>
+                  <TableCell>₹{returnItem.refund_amount || 0}</TableCell>
+                  <TableCell>{new Date(returnItem.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <Badge
                       variant={
@@ -217,18 +176,20 @@ export default function Returns() {
                           : "outline"
                       }
                     >
-                      {returnItem.status === "pending_approval"
+                      {returnItem.status === "requested"
                         ? "Pending"
                         : returnItem.status === "approved"
                         ? "Approved"
                         : returnItem.status === "pickup_scheduled"
                         ? "Pickup Scheduled"
+                        : returnItem.status === "picked_up"
+                        ? "Picked Up"
                         : "Completed"}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      {returnItem.status === "pending_approval" && (
+                      {returnItem.status === "requested" && (
                         <>
                           <Button size="sm" variant="outline" onClick={() => handleApprove(returnItem.id)}>
                             Approve
@@ -238,7 +199,7 @@ export default function Returns() {
                           </Button>
                         </>
                       )}
-                      {returnItem.status !== "pending_approval" && (
+                      {returnItem.status !== "requested" && (
                         <Button size="sm" variant="outline" onClick={() => handleView(returnItem.id)}>
                           View
                         </Button>

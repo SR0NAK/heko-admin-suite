@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,27 +6,78 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowLeft, Package, MapPin, User, Wallet, Clock } from "lucide-react";
-import { mockOrders } from "@/lib/mockData";
 import { StatusBadge, OrderStatus } from "@/components/StatusBadge";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function OrderDetail() {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  const [order, setOrder] = useState(mockOrders.find(o => o.id === orderId));
+  const [order, setOrder] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select(`
+          *,
+          profiles(name),
+          order_items(*),
+          user_addresses(*)
+        `)
+        .eq("id", orderId)
+        .single();
+
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        setOrder(data);
+      }
+      setIsLoading(false);
+    };
+
+    fetchOrder();
+  }, [orderId, toast]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-12 w-64" />
+        <div className="grid gap-6 md:grid-cols-3">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!order) {
     return <div>Order not found</div>;
   }
 
-  const handleStatusUpdate = (newStatus: OrderStatus) => {
-    setOrder({ ...order, status: newStatus });
-    toast({
-      title: "Status Updated",
-      description: `Order status changed to ${newStatus}`,
-    });
+  const handleStatusUpdate = async (newStatus: OrderStatus) => {
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: newStatus })
+      .eq("id", orderId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      setOrder({ ...order, status: newStatus });
+      toast({
+        title: "Status Updated",
+        description: `Order status changed to ${newStatus}`,
+      });
+    }
   };
 
   return (
@@ -37,7 +88,7 @@ export default function OrderDetail() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">{order.id}</h1>
+            <h1 className="text-3xl font-bold">{order.order_number}</h1>
             <p className="text-muted-foreground">Order Details</p>
           </div>
         </div>
@@ -89,14 +140,14 @@ export default function OrderDetail() {
               <User className="h-5 w-5 text-muted-foreground" />
               <div>
                 <p className="text-sm text-muted-foreground">Customer Name</p>
-                <p className="font-medium">{order.userName}</p>
+                <p className="font-medium">{order.profiles?.name || "N/A"}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <MapPin className="h-5 w-5 text-muted-foreground" />
               <div>
                 <p className="text-sm text-muted-foreground">Delivery Address</p>
-                <p className="font-medium">{order.address}</p>
+                <p className="font-medium">{order.user_addresses?.address_line1 || "N/A"}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -125,7 +176,6 @@ export default function OrderDetail() {
                   <SelectItem value="processing">Processing</SelectItem>
                   <SelectItem value="partially_accepted">Partially Accepted</SelectItem>
                   <SelectItem value="preparing">Preparing</SelectItem>
-                  <SelectItem value="picked">Picked Up</SelectItem>
                   <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
                   <SelectItem value="delivered">Delivered</SelectItem>
                   <SelectItem value="partially_delivered">Partially Delivered</SelectItem>
@@ -137,11 +187,11 @@ export default function OrderDetail() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Delivery Partner</p>
-              <p className="font-medium">{order.deliveryPartner}</p>
+              <p className="font-medium">-</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Delivery OTP</p>
-              <p className="font-mono text-2xl font-bold">{order.deliveryOtp}</p>
+              <p className="font-mono text-2xl font-bold">-</p>
             </div>
           </CardContent>
         </Card>
@@ -162,12 +212,12 @@ export default function OrderDetail() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {order.items.map((item, index) => (
+              {order.order_items?.map((item: any, index: number) => (
                 <TableRow key={index}>
-                  <TableCell className="font-medium">{item.name}</TableCell>
+                  <TableCell className="font-medium">{item.product_name}</TableCell>
                   <TableCell>{item.quantity}</TableCell>
-                  <TableCell>₹{item.price}</TableCell>
-                  <TableCell className="text-right">₹{item.quantity * item.price}</TableCell>
+                  <TableCell>₹{item.unit_price}</TableCell>
+                  <TableCell className="text-right">₹{item.total_price}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

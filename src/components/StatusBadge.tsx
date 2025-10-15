@@ -6,7 +6,6 @@ export type OrderStatus =
   | "processing"
   | "partially_accepted"
   | "preparing"
-  | "picked"
   | "out_for_delivery"
   | "delivered"
   | "partially_delivered"
@@ -38,10 +37,6 @@ const statusConfig: Record<
   preparing: {
     label: "Preparing",
     className: "bg-[hsl(var(--status-pending))] text-white hover:bg-[hsl(var(--status-pending))]",
-  },
-  picked: {
-    label: "Picked Up",
-    className: "bg-[hsl(var(--status-processing))] text-white hover:bg-[hsl(var(--status-processing))]",
   },
   out_for_delivery: {
     label: "Out for Delivery",

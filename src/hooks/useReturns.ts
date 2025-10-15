@@ -11,15 +11,28 @@ export const useReturns = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("returns")
-        .select(`
-          *,
-          orders(order_number),
-          profiles(name)
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+
+      // Fetch related data separately
+      const returnsWithDetails = await Promise.all(
+        data.map(async (returnItem) => {
+          const [orderRes, profileRes] = await Promise.all([
+            supabase.from("orders").select("order_number").eq("id", returnItem.order_id).single(),
+            supabase.from("profiles").select("name").eq("id", returnItem.user_id).single(),
+          ]);
+          
+          return {
+            ...returnItem,
+            orders: orderRes.data,
+            profiles: profileRes.data,
+          };
+        })
+      );
+
+      return returnsWithDetails;
     },
   });
 

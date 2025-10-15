@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Truck, Star, TrendingUp, Clock } from "lucide-react";
+import { Truck, Star, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,93 +15,41 @@ import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/MetricCard";
 import { DeliveryPartnerForm } from "@/components/forms/DeliveryPartnerForm";
 import { DeliveryPartnerDetailDialog } from "@/components/DeliveryPartnerDetailDialog";
-import { toast } from "sonner";
-
-const mockPartners = [
-  {
-    id: "DP001",
-    name: "Rajesh Kumar",
-    email: "rajesh@example.com",
-    phone: "+91 9876543210",
-    vehicleType: "Bike",
-    vehicleNumber: "KA01AB1234",
-    vehicle: "Bike",
-    status: "active",
-    activeDeliveries: 3,
-    activeOrders: 3,
-    completedToday: 12,
-    completedDeliveries: 245,
-    rating: 4.8,
-    avgTime: "18 min",
-  },
-  {
-    id: "DP002",
-    name: "Suresh Babu",
-    email: "suresh@example.com",
-    phone: "+91 9876543211",
-    vehicleType: "Bike",
-    vehicleNumber: "KA01CD5678",
-    vehicle: "Bike",
-    status: "active",
-    activeDeliveries: 2,
-    activeOrders: 2,
-    completedToday: 15,
-    completedDeliveries: 312,
-    rating: 4.9,
-    avgTime: "16 min",
-  },
-  {
-    id: "DP003",
-    name: "Amit Sharma",
-    email: "amit@example.com",
-    phone: "+91 9876543212",
-    vehicleType: "Scooter",
-    vehicleNumber: "KA02EF9012",
-    vehicle: "Scooter",
-    status: "offline",
-    activeDeliveries: 0,
-    activeOrders: 0,
-    completedToday: 0,
-    completedDeliveries: 189,
-    rating: 4.6,
-    avgTime: "20 min",
-  },
-];
+import { useDeliveryPartners } from "@/hooks/useDeliveryPartners";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DeliveryPartners() {
-  const [partners, setPartners] = useState(mockPartners);
+  const { deliveryPartners, isLoading, createDeliveryPartner, updateDeliveryPartner } = useDeliveryPartners();
   const [formOpen, setFormOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
-  const [editingPartner, setEditingPartner] = useState<typeof mockPartners[0] | undefined>();
-  const [selectedPartner, setSelectedPartner] = useState<typeof mockPartners[0] | null>(null);
+  const [editingPartner, setEditingPartner] = useState<any>();
+  const [selectedPartner, setSelectedPartner] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  const filteredPartners = partners.filter((partner) => {
+  const filteredPartners = deliveryPartners.filter((partner) => {
     const matchesSearch = partner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       partner.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      partner.vehicle.toLowerCase().includes(searchQuery.toLowerCase());
+      (partner.vehicle_type && partner.vehicle_type.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesFilter = filterStatus === "all" || partner.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
   const handleSavePartner = (partner: any) => {
     if (editingPartner) {
-      setPartners(partners.map(p => p.id === partner.id ? partner : p));
-      toast.success("Delivery partner updated successfully");
+      updateDeliveryPartner({ id: partner.id, ...partner });
     } else {
-      setPartners([...partners, partner]);
-      toast.success("Delivery partner added successfully");
+      createDeliveryPartner(partner);
     }
     setEditingPartner(undefined);
   };
 
-  const handleViewClick = (partner: typeof mockPartners[0]) => {
+  const handleViewClick = (partner: any) => {
     setSelectedPartner(partner);
     setDetailOpen(true);
   };
 
-  const handleEditClick = (partner: typeof mockPartners[0]) => {
+  const handleEditClick = (partner: any) => {
     setEditingPartner(partner);
     setFormOpen(true);
   };
@@ -119,6 +67,19 @@ export default function DeliveryPartners() {
     setFormOpen(true);
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-12 w-64" />
+        <div className="grid gap-4 md:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -134,23 +95,22 @@ export default function DeliveryPartners() {
       <div className="grid gap-4 md:grid-cols-4">
         <MetricCard
           title="Total Partners"
-          value="45"
+          value={deliveryPartners.length.toString()}
           icon={Truck}
-          trend={{ value: 8, label: "vs last month" }}
         />
         <MetricCard
           title="Active Now"
-          value="32"
+          value={deliveryPartners.filter(p => p.status === "active").length.toString()}
           icon={Truck}
         />
         <MetricCard
           title="Avg Rating"
-          value="4.7"
+          value={(deliveryPartners.reduce((sum, p) => sum + (p.rating || 0), 0) / deliveryPartners.length || 0).toFixed(1)}
           icon={Star}
         />
         <MetricCard
-          title="Avg Time"
-          value="18 min"
+          title="Active Deliveries"
+          value={deliveryPartners.reduce((sum, p) => sum + (p.active_deliveries || 0), 0).toString()}
           icon={Clock}
         />
       </div>
@@ -194,19 +154,19 @@ export default function DeliveryPartners() {
             <TableBody>
               {filteredPartners.map((partner) => (
                 <TableRow key={partner.id}>
-                  <TableCell className="font-medium">{partner.id}</TableCell>
+                  <TableCell className="font-medium">{partner.id.slice(0, 8)}</TableCell>
                   <TableCell>{partner.name}</TableCell>
                   <TableCell>{partner.phone}</TableCell>
-                  <TableCell>{partner.vehicle}</TableCell>
-                  <TableCell>{partner.activeDeliveries}</TableCell>
-                  <TableCell>{partner.completedToday}</TableCell>
+                  <TableCell>{partner.vehicle_type || "N/A"}</TableCell>
+                  <TableCell>{partner.active_deliveries || 0}</TableCell>
+                  <TableCell>{partner.completed_deliveries || 0}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      {partner.rating}
+                      {partner.rating || 0}
                     </div>
                   </TableCell>
-                  <TableCell>{partner.avgTime}</TableCell>
+                  <TableCell>-</TableCell>
                   <TableCell>
                     <Badge
                       variant={

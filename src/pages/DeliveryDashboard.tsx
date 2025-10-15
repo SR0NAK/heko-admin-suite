@@ -39,7 +39,7 @@ const activeDeliveries = [
     pickupAddress: "123 Market St, Zone A",
     deliveryAddress: "456 Oak Avenue, Zone B",
     distance: "3.2 km",
-    status: "picked" as const,
+    status: "out_for_delivery" as const,
     requiresOTP: true,
     deliveryOTP: "8765",
   },
@@ -127,7 +127,7 @@ export default function DeliveryDashboard() {
   };
 
   const handleNavigate = (delivery: typeof activeDeliveries[0]) => {
-    const address = delivery.status === "picked" 
+    const address = delivery.status === "out_for_delivery" 
       ? delivery.deliveryAddress 
       : delivery.pickupAddress;
     
@@ -151,7 +151,6 @@ export default function DeliveryDashboard() {
       const statusMessages: { [key: string]: string } = {
         assigned: "You've been assigned to this delivery",
         preparing: "Vendor is preparing the order",
-        picked: "Order picked up from vendor. Heading to customer.",
         out_for_delivery: "Out for delivery to customer",
         delivered: "Delivery completed successfully",
       };
@@ -443,7 +442,6 @@ export default function DeliveryDashboard() {
                 <SelectContent>
                   <SelectItem value="assigned">Assigned</SelectItem>
                   <SelectItem value="preparing">Preparing</SelectItem>
-                  <SelectItem value="picked">Picked Up</SelectItem>
                   <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
                   <SelectItem value="delivered">Delivered</SelectItem>
                 </SelectContent>
