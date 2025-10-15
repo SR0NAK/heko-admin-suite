@@ -8,15 +8,20 @@ import { Switch } from "@/components/ui/switch";
 
 interface Vendor {
   id: string;
-  name: string;
+  user_id: string;
+  business_name: string;
+  owner_name: string;
   email: string;
   phone: string;
   address: string;
-  gst: string;
-  category: string;
+  latitude?: number;
+  longitude?: number;
+  service_radius?: number;
   status: string;
-  rating: number;
-  totalProducts: number;
+  rating?: number;
+  total_orders?: number;
+  completed_orders?: number;
+  acceptance_rate?: number;
 }
 
 interface VendorFormProps {
@@ -29,15 +34,15 @@ interface VendorFormProps {
 export function VendorForm({ open, onOpenChange, vendor, onSave }: VendorFormProps) {
   const [formData, setFormData] = useState<Vendor>({
     id: '',
-    name: '',
+    user_id: '',
+    business_name: '',
+    owner_name: '',
     email: '',
     phone: '',
     address: '',
-    gst: '',
-    category: '',
     status: 'active',
     rating: 0,
-    totalProducts: 0,
+    service_radius: 5,
   });
 
   useEffect(() => {
@@ -46,15 +51,15 @@ export function VendorForm({ open, onOpenChange, vendor, onSave }: VendorFormPro
     } else {
       setFormData({
         id: '',
-        name: '',
+        user_id: '',
+        business_name: '',
+        owner_name: '',
         email: '',
         phone: '',
         address: '',
-        gst: '',
-        category: '',
         status: 'active',
         rating: 0,
-        totalProducts: 0,
+        service_radius: 5,
       });
     }
   }, [vendor]);
@@ -77,32 +82,31 @@ export function VendorForm({ open, onOpenChange, vendor, onSave }: VendorFormPro
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="name">Vendor Name *</Label>
+              <Label htmlFor="business_name">Business Name *</Label>
               <Input
-                id="name"
+                id="business_name"
                 required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                value={formData.business_name}
+                onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
+              <Label htmlFor="owner_name">Owner Name *</Label>
               <Input
-                id="category"
+                id="owner_name"
                 required
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                value={formData.owner_name}
+                onChange={(e) => setFormData({ ...formData, owner_name: e.target.value })}
               />
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
@@ -119,9 +123,10 @@ export function VendorForm({ open, onOpenChange, vendor, onSave }: VendorFormPro
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
+            <Label htmlFor="address">Address *</Label>
             <Textarea
               id="address"
+              required
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               rows={2}
@@ -129,11 +134,12 @@ export function VendorForm({ open, onOpenChange, vendor, onSave }: VendorFormPro
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="gst">GST Number</Label>
+            <Label htmlFor="service_radius">Service Radius (km)</Label>
             <Input
-              id="gst"
-              value={formData.gst}
-              onChange={(e) => setFormData({ ...formData, gst: e.target.value })}
+              id="service_radius"
+              type="number"
+              value={formData.service_radius}
+              onChange={(e) => setFormData({ ...formData, service_radius: parseInt(e.target.value) })}
             />
           </div>
 

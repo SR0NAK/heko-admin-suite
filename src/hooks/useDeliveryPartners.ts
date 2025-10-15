@@ -21,7 +21,12 @@ export const useDeliveryPartners = () => {
 
   const createDeliveryPartner = useMutation({
     mutationFn: async (partnerData: any) => {
-      const { error } = await supabase.from("delivery_partners").insert(partnerData);
+      // Generate a placeholder user_id if not provided
+      const dataToInsert = {
+        ...partnerData,
+        user_id: partnerData.user_id || crypto.randomUUID(),
+      };
+      const { error } = await supabase.from("delivery_partners").insert(dataToInsert);
       if (error) throw error;
     },
     onSuccess: () => {

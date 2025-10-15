@@ -8,15 +8,18 @@ import { Switch } from "@/components/ui/switch";
 
 interface DeliveryPartner {
   id: string;
+  user_id: string;
   name: string;
   email: string;
   phone: string;
-  vehicleType: string;
-  vehicleNumber: string;
+  vehicle_type: string;
+  vehicle_number: string;
   status: string;
-  rating: number;
-  completedDeliveries: number;
-  activeOrders: number;
+  rating?: number;
+  completed_deliveries?: number;
+  active_deliveries?: number;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface DeliveryPartnerFormProps {
@@ -29,15 +32,13 @@ interface DeliveryPartnerFormProps {
 export function DeliveryPartnerForm({ open, onOpenChange, partner, onSave }: DeliveryPartnerFormProps) {
   const [formData, setFormData] = useState<DeliveryPartner>({
     id: '',
+    user_id: '',
     name: '',
     email: '',
     phone: '',
-    vehicleType: '',
-    vehicleNumber: '',
+    vehicle_type: '',
+    vehicle_number: '',
     status: 'active',
-    rating: 0,
-    completedDeliveries: 0,
-    activeOrders: 0,
   });
 
   useEffect(() => {
@@ -46,15 +47,13 @@ export function DeliveryPartnerForm({ open, onOpenChange, partner, onSave }: Del
     } else {
       setFormData({
         id: '',
+        user_id: '',
         name: '',
         email: '',
         phone: '',
-        vehicleType: '',
-        vehicleNumber: '',
+        vehicle_type: '',
+        vehicle_number: '',
         status: 'active',
-        rating: 0,
-        completedDeliveries: 0,
-        activeOrders: 0,
       });
     }
   }, [partner]);
@@ -109,10 +108,10 @@ export function DeliveryPartnerForm({ open, onOpenChange, partner, onSave }: Del
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="vehicleType">Vehicle Type *</Label>
+              <Label htmlFor="vehicle_type">Vehicle Type *</Label>
               <Select
-                value={formData.vehicleType}
-                onValueChange={(value) => setFormData({ ...formData, vehicleType: value })}
+                value={formData.vehicle_type}
+                onValueChange={(value) => setFormData({ ...formData, vehicle_type: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select vehicle type" />
@@ -126,12 +125,12 @@ export function DeliveryPartnerForm({ open, onOpenChange, partner, onSave }: Del
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="vehicleNumber">Vehicle Number *</Label>
+              <Label htmlFor="vehicle_number">Vehicle Number *</Label>
               <Input
-                id="vehicleNumber"
+                id="vehicle_number"
                 required
-                value={formData.vehicleNumber}
-                onChange={(e) => setFormData({ ...formData, vehicleNumber: e.target.value })}
+                value={formData.vehicle_number}
+                onChange={(e) => setFormData({ ...formData, vehicle_number: e.target.value })}
               />
             </div>
           </div>

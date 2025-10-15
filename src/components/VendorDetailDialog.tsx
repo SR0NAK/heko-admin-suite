@@ -5,19 +5,20 @@ import { Star, MapPin, Package, ShoppingCart } from "lucide-react";
 
 interface Vendor {
   id: string;
-  name: string;
-  email: string;
+  user_id: string;
+  business_name: string;
+  owner_name: string;
+  email?: string;
   phone: string;
   address: string;
-  gst: string;
-  category: string;
-  area: string;
+  latitude?: number;
+  longitude?: number;
+  service_radius?: number;
   status: string;
-  productsAssigned: number;
-  totalProducts: number;
-  ordersCompleted: number;
-  acceptanceRate: number;
-  rating: number;
+  rating?: number;
+  total_orders?: number;
+  completed_orders?: number;
+  acceptance_rate?: number;
 }
 
 interface VendorDetailDialogProps {
@@ -49,27 +50,27 @@ export function VendorDetailDialog({ open, onOpenChange, vendor, onEdit }: Vendo
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <p className="text-sm text-muted-foreground">Vendor ID</p>
-                <p className="font-medium">{vendor.id}</p>
+                <p className="font-medium">{vendor.id.slice(0, 8)}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Name</p>
-                <p className="font-medium">{vendor.name}</p>
+                <p className="text-sm text-muted-foreground">Business Name</p>
+                <p className="font-medium">{vendor.business_name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Owner Name</p>
+                <p className="font-medium">{vendor.owner_name}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Email</p>
-                <p className="font-medium">{vendor.email}</p>
+                <p className="font-medium">{vendor.email || "N/A"}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Phone</p>
                 <p className="font-medium">{vendor.phone}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Category</p>
-                <p className="font-medium">{vendor.category}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">GST Number</p>
-                <p className="font-medium">{vendor.gst || "N/A"}</p>
+                <p className="text-sm text-muted-foreground">Service Radius</p>
+                <p className="font-medium">{vendor.service_radius || 5} km</p>
               </div>
             </div>
           </div>
@@ -80,7 +81,6 @@ export function VendorDetailDialog({ open, onOpenChange, vendor, onEdit }: Vendo
             <div className="flex items-start gap-2">
               <MapPin className="h-4 w-4 mt-1 text-muted-foreground" />
               <div>
-                <p className="font-medium">{vendor.area}</p>
                 <p className="text-sm text-muted-foreground">{vendor.address}</p>
               </div>
             </div>
@@ -95,8 +95,8 @@ export function VendorDetailDialog({ open, onOpenChange, vendor, onEdit }: Vendo
                   <Package className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Products</p>
-                  <p className="text-xl font-bold">{vendor.productsAssigned}</p>
+                  <p className="text-sm text-muted-foreground">Total Orders</p>
+                  <p className="text-xl font-bold">{vendor.total_orders || 0}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 border rounded-lg">
@@ -105,7 +105,7 @@ export function VendorDetailDialog({ open, onOpenChange, vendor, onEdit }: Vendo
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Orders Completed</p>
-                  <p className="text-xl font-bold">{vendor.ordersCompleted}</p>
+                  <p className="text-xl font-bold">{vendor.completed_orders || 0}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 border rounded-lg">
@@ -114,7 +114,7 @@ export function VendorDetailDialog({ open, onOpenChange, vendor, onEdit }: Vendo
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Rating</p>
-                  <p className="text-xl font-bold">{vendor.rating}</p>
+                  <p className="text-xl font-bold">{vendor.rating || 0}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 border rounded-lg">
@@ -123,7 +123,7 @@ export function VendorDetailDialog({ open, onOpenChange, vendor, onEdit }: Vendo
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Acceptance Rate</p>
-                  <p className="text-xl font-bold">{vendor.acceptanceRate}%</p>
+                  <p className="text-xl font-bold">{vendor.acceptance_rate || 0}%</p>
                 </div>
               </div>
             </div>

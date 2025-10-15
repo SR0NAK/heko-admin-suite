@@ -21,7 +21,12 @@ export const useVendors = () => {
 
   const createVendor = useMutation({
     mutationFn: async (vendorData: any) => {
-      const { error } = await supabase.from("vendors").insert(vendorData);
+      // Generate a placeholder user_id if not provided
+      const dataToInsert = {
+        ...vendorData,
+        user_id: vendorData.user_id || crypto.randomUUID(),
+      };
+      const { error } = await supabase.from("vendors").insert(dataToInsert);
       if (error) throw error;
     },
     onSuccess: () => {
