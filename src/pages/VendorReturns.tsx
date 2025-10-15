@@ -30,72 +30,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-
-const mockReturns = [
-  {
-    id: "RET-001",
-    orderId: "ORD-003",
-    customer: "Alice Johnson",
-    items: [
-      { name: "Organic Apples", quantity: 2, price: 125 }
-    ],
-    reason: "Quality Issue",
-    status: "pending" as const,
-    date: "2024-01-14",
-    amount: 250,
-    pickupOtp: null as string | null,
-    pickupStatus: null as string | null,
-    deliveryPartnerId: null as string | null,
-  },
-  {
-    id: "RET-002",
-    orderId: "ORD-007",
-    customer: "Bob Smith",
-    items: [
-      { name: "Fresh Milk", quantity: 1, price: 80 }
-    ],
-    reason: "Wrong Item",
-    status: "approved" as const,
-    date: "2024-01-13",
-    amount: 80,
-    pickupOtp: "5678",
-    pickupStatus: "out_for_pickup" as string | null,
-    deliveryPartnerId: "DP-002",
-  },
-  {
-    id: "RET-003",
-    orderId: "ORD-011",
-    customer: "Carol White",
-    items: [
-      { name: "Whole Wheat Bread", quantity: 1, price: 45 }
-    ],
-    reason: "Expired Product",
-    status: "pending" as const,
-    date: "2024-01-15",
-    amount: 45,
-    pickupOtp: null,
-    pickupStatus: null,
-    deliveryPartnerId: null,
-  },
-  {
-    id: "RET-004",
-    orderId: "ORD-015",
-    customer: "David Brown",
-    items: [
-      { name: "Greek Yogurt", quantity: 2, price: 120 },
-      { name: "Fresh Milk", quantity: 1, price: 60 }
-    ],
-    reason: "Damaged Product",
-    status: "pickup_scheduled" as const,
-    date: "2024-01-15",
-    amount: 300,
-    pickupOtp: "1234",
-    pickupStatus: "scheduled" as string | null,
-    deliveryPartnerId: "DP-001",
-  },
-];
+import { useVendorReturns } from "@/hooks/useVendorReturns";
 
 export default function VendorReturns() {
+  const { returns, isLoading, updateReturnStatus } = useVendorReturns();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedReturn, setSelectedReturn] = useState<any>(null);
@@ -104,11 +42,9 @@ export default function VendorReturns() {
   const [selectedReturnForUpdate, setSelectedReturnForUpdate] = useState<any>(null);
   const [newStatus, setNewStatus] = useState<string>("");
 
-  const filteredReturns = mockReturns.filter((ret) => {
+  const filteredReturns = returns.filter((ret: any) => {
     const matchesSearch =
-      ret.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ret.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ret.items.some(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      ret.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || ret.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -119,19 +55,12 @@ export default function VendorReturns() {
   };
 
   const handleApprove = (returnId: string) => {
-    toast({
-      title: "Return Approved",
-      description: `Return request ${returnId} has been approved. Pickup will be scheduled.`,
-    });
+    updateReturnStatus({ id: returnId, status: "approved" });
     setDetailsOpen(false);
   };
 
   const handleReject = (returnId: string) => {
-    toast({
-      title: "Return Rejected",
-      description: `Return request ${returnId} has been rejected. Customer has been notified.`,
-      variant: "destructive",
-    });
+    updateReturnStatus({ id: returnId, status: "rejected" });
     setDetailsOpen(false);
   };
 
@@ -143,17 +72,7 @@ export default function VendorReturns() {
 
   const handleConfirmStatusUpdate = () => {
     if (selectedReturnForUpdate && newStatus) {
-      const statusMessages: { [key: string]: string } = {
-        scheduled: "Pickup has been scheduled",
-        out_for_pickup: "Delivery partner is on the way for pickup",
-        completed: "Pickup completed successfully. Refund will be processed.",
-      };
-
-      toast({
-        title: "Pickup Status Updated",
-        description: `${selectedReturnForUpdate.id}: ${statusMessages[newStatus] || "Status updated"}`,
-      });
-
+      updateReturnStatus({ id: selectedReturnForUpdate.id, status: newStatus });
       setUpdateStatusDialogOpen(false);
       setSelectedReturnForUpdate(null);
     }
@@ -186,6 +105,14 @@ export default function VendorReturns() {
     };
     return labels[status] || status;
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -242,77 +169,73 @@ export default function VendorReturns() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredReturns.map((returnItem) => (
-                <TableRow 
-                  key={returnItem.id}
-                  className="cursor-pointer hover:bg-accent/50"
-                  onClick={() => handleViewDetails(returnItem)}
-                >
-                  <TableCell className="font-medium">{returnItem.id}</TableCell>
-                  <TableCell>{returnItem.orderId}</TableCell>
-                  <TableCell>{returnItem.customer}</TableCell>
-                  <TableCell className="text-sm">
-                    {returnItem.items.length} item(s)
+              {filteredReturns.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center text-muted-foreground py-4">
+                    No return requests found
                   </TableCell>
-                  <TableCell className="text-sm">{returnItem.reason}</TableCell>
-                  <TableCell className="font-semibold">
-                    ₹{returnItem.amount}
-                  </TableCell>
-                  <TableCell className="text-sm">{returnItem.date}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(returnItem.status)}>
-                      {getStatusLabel(returnItem.status)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {returnItem.pickupStatus ? (
-                      <Badge variant="secondary" className="capitalize">
-                        {returnItem.pickupStatus.replace("_", " ")}
+                </TableRow>
+              ) : (
+                filteredReturns.map((returnItem: any) => (
+                  <TableRow 
+                    key={returnItem.id}
+                    className="cursor-pointer hover:bg-accent/50"
+                    onClick={() => handleViewDetails(returnItem)}
+                  >
+                    <TableCell className="font-medium">{returnItem.id.slice(0, 8)}</TableCell>
+                    <TableCell>{returnItem.orders?.order_number || "-"}</TableCell>
+                    <TableCell>Customer</TableCell>
+                    <TableCell className="text-sm">
+                      {returnItem.return_items?.length || 0} item(s)
+                    </TableCell>
+                    <TableCell className="text-sm">{returnItem.reason}</TableCell>
+                    <TableCell className="font-semibold">
+                      ₹{returnItem.refund_amount || 0}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {new Date(returnItem.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(returnItem.status)}>
+                        {getStatusLabel(returnItem.status)}
                       </Badge>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewDetails(returnItem);
-                        }}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                      {returnItem.status === "pending" && (
-                        <Button
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleApprove(returnItem.id);
-                          }}
-                        >
-                          Approve
-                        </Button>
+                    </TableCell>
+                    <TableCell>
+                      {returnItem.pickup_otp ? (
+                        <Badge variant="secondary">Scheduled</Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">-</span>
                       )}
-                      {(returnItem.status === "approved" || returnItem.status === "pickup_scheduled") && (
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleUpdatePickupStatus(returnItem);
+                            handleViewDetails(returnItem);
                           }}
                         >
-                          Update Pickup
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
                         </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        {returnItem.status === "requested" && (
+                          <Button
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleApprove(returnItem.id);
+                            }}
+                          >
+                            Approve
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>

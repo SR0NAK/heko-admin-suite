@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Store, Clock, Settings as SettingsIcon } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Store, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,14 +7,28 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
+import { useVendorProfile } from "@/hooks/useVendorProfile";
 
 export default function VendorSettings() {
+  const { vendor, isLoading, updateVendor } = useVendorProfile();
+  
   const [storeInfo, setStoreInfo] = useState({
-    storeName: "Fresh Mart",
-    contactNumber: "+91 98765 43210",
-    email: "freshmart@example.com",
-    address: "123 Market Street, Mumbai, Maharashtra",
+    storeName: "",
+    contactNumber: "",
+    email: "",
+    address: "",
   });
+
+  useEffect(() => {
+    if (vendor) {
+      setStoreInfo({
+        storeName: vendor.business_name || "",
+        contactNumber: vendor.phone || "",
+        email: vendor.email || "",
+        address: vendor.address || "",
+      });
+    }
+  }, [vendor]);
 
   const [timings, setTimings] = useState({
     monday: { open: "09:00", close: "21:00", isOpen: true },
@@ -27,9 +41,11 @@ export default function VendorSettings() {
   });
 
   const handleSaveStoreInfo = () => {
-    toast({
-      title: "Store Information Updated",
-      description: "Your store details have been saved successfully",
+    updateVendor({
+      business_name: storeInfo.storeName,
+      phone: storeInfo.contactNumber,
+      email: storeInfo.email,
+      address: storeInfo.address,
     });
   };
 
@@ -50,6 +66,14 @@ export default function VendorSettings() {
       [day]: { ...timings[day as keyof typeof timings], [field]: value },
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

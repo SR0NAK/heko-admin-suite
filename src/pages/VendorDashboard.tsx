@@ -21,85 +21,18 @@ import {
 } from "@/components/ui/table";
 import { VendorOrderDetailDialog } from "@/components/VendorOrderDetailDialog";
 import { useToast } from "@/hooks/use-toast";
-
-const newOrderAssignments = [
-  {
-    id: "ORD-012",
-    customer: "Emily Davis",
-    items: [
-      { name: "Organic Apples", quantity: 2, price: 180 },
-      { name: "Fresh Milk", quantity: 2, price: 60 },
-      { name: "Whole Wheat Bread", quantity: 1, price: 45 },
-      { name: "Organic Tomatoes", quantity: 1, price: 80 },
-      { name: "Free Range Eggs", quantity: 1, price: 90 },
-      { name: "Greek Yogurt", quantity: 1, price: 120 },
-    ],
-    total: 735,
-    status: "placed" as const,
-    timeRemaining: "30m",
-  },
-  {
-    id: "ORD-013",
-    customer: "Tom Hardy",
-    items: [
-      { name: "Organic Apples", quantity: 1, price: 180 },
-      { name: "Fresh Milk", quantity: 3, price: 60 },
-      { name: "Brown Bread", quantity: 2, price: 50 },
-      { name: "Paneer", quantity: 1, price: 150 },
-    ],
-    total: 610,
-    status: "placed" as const,
-    timeRemaining: "25m",
-  },
-];
-
-const assignedOrders = [
-  {
-    id: "ORD-001",
-    customer: "John Doe",
-    items: [
-      { name: "Organic Tomatoes", quantity: 2, price: 80 },
-      { name: "Fresh Milk", quantity: 1, price: 60 },
-      { name: "Whole Wheat Bread", quantity: 2, price: 45 },
-    ],
-    total: 310,
-    status: "preparing" as const,
-    timeRemaining: "15m",
-  },
-  {
-    id: "ORD-005",
-    customer: "Sarah Connor",
-    items: [
-      { name: "Organic Apples", quantity: 3, price: 180 },
-      { name: "Greek Yogurt", quantity: 2, price: 120 },
-      { name: "Free Range Eggs", quantity: 2, price: 90 },
-      { name: "Fresh Milk", quantity: 2, price: 60 },
-      { name: "Paneer", quantity: 1, price: 150 },
-    ],
-    total: 1200,
-    status: "placed" as const,
-    timeRemaining: "45m",
-  },
-  {
-    id: "ORD-008",
-    customer: "Mike Ross",
-    items: [
-      { name: "Organic Apples", quantity: 1, price: 180 },
-      { name: "Fresh Milk", quantity: 1, price: 60 },
-    ],
-    total: 450,
-    status: "out_for_delivery" as const,
-    timeRemaining: "-",
-  },
-];
+import { useVendorOrders } from "@/hooks/useVendorOrders";
+import { useVendorReturns } from "@/hooks/useVendorReturns";
 
 export default function VendorDashboard() {
   const { toast } = useToast();
-  const [selectedOrder, setSelectedOrder] = useState<typeof assignedOrders[0] | null>(null);
+  const { orders, isLoading: ordersLoading, updateItemStatus } = useVendorOrders();
+  const { returns, isLoading: returnsLoading } = useVendorReturns();
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [showActions, setShowActions] = useState(false);
 
-  const handleViewDetails = (order: typeof assignedOrders[0], withActions = false) => {
+  const handleViewDetails = (order: any, withActions = false) => {
     setSelectedOrder(order);
     setShowActions(withActions);
     setDialogOpen(true);
@@ -122,7 +55,7 @@ export default function VendorDashboard() {
     setDialogOpen(false);
   };
 
-  const handlePartialAccept = (selectedItems: typeof assignedOrders[0]['items']) => {
+  const handlePartialAccept = (selectedItems: any[]) => {
     const itemNames = selectedItems.map(item => item.name).join(", ");
     toast({
       title: "Partial Order Accepted",
@@ -138,8 +71,28 @@ export default function VendorDashboard() {
     });
   };
 
+  if (ordersLoading || returnsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  const newOrders = orders.filter((o: any) => o.status === "placed") || [];
+  const activeOrders = orders.filter((o: any) => ["preparing", "out_for_delivery"].includes(o.status)) || [];
+  const preparingOrders = orders.filter((o: any) => o.status === "preparing") || [];
+  const pendingReturns = returns.filter((r: any) => r.status === "requested") || [];
+  
+  const todayRevenue = orders
+    .filter((o: any) => {
+      const today = new Date().toDateString();
+      return new Date(o.created_at).toDateString() === today && o.status === "delivered";
+    })
+    .reduce((sum: number, o: any) => sum + parseFloat(o.total || 0), 0);
+
   return (
-    <div className="space-y-6">{" "}
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Vendor Dashboard</h1>
         <p className="text-muted-foreground">
@@ -150,27 +103,26 @@ export default function VendorDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="Pending Orders"
-          value="8"
+          value={newOrders.length.toString()}
           icon={ShoppingCart}
           variant="default"
         />
         <MetricCard
           title="Preparing"
-          value="5"
+          value={preparingOrders.length.toString()}
           icon={Package}
           variant="secondary"
         />
         <MetricCard
-          title="Avg Prep Time"
-          value="18m"
+          title="Active Orders"
+          value={activeOrders.length.toString()}
           icon={Clock}
           variant="primary"
         />
         <MetricCard
           title="Today's Revenue"
-          value="₹12,450"
+          value={`₹${todayRevenue.toLocaleString()}`}
           icon={TrendingUp}
-          trend={{ value: 8, label: "vs yesterday" }}
           variant="accent"
         />
       </div>
@@ -183,42 +135,46 @@ export default function VendorDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {newOrderAssignments.map((order) => (
-            <div
-              key={order.id}
-              className="flex items-center justify-between p-4 rounded-lg bg-white border cursor-pointer hover:bg-accent/50 transition-colors"
-              onClick={() => handleViewDetails(order, true)}
-            >
-              <div>
-                <p className="font-semibold">Order #{order.id}</p>
-                <p className="text-sm text-muted-foreground">
-                  {order.items.length} items • Customer: {order.customer}
-                </p>
+          {newOrders.length === 0 ? (
+            <p className="text-center text-muted-foreground py-4">No new orders</p>
+          ) : (
+            newOrders.map((order: any) => (
+              <div
+                key={order.id}
+                className="flex items-center justify-between p-4 rounded-lg bg-white border cursor-pointer hover:bg-accent/50 transition-colors"
+                onClick={() => handleViewDetails(order, true)}
+              >
+                <div>
+                  <p className="font-semibold">Order #{order.order_number}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {order.items?.length || 0} items
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewDetails(order, true);
+                    }}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    View Details
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAccept();
+                    }}
+                  >
+                    Accept All
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleViewDetails(order, true);
-                  }}
-                >
-                  <Eye className="h-4 w-4 mr-1" />
-                  View Details
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAccept();
-                  }}
-                >
-                  Accept All
-                </Button>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </CardContent>
       </Card>
 
@@ -243,60 +199,47 @@ export default function VendorDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {assignedOrders.map((order) => (
-                <TableRow
-                  key={order.id}
-                  className="cursor-pointer hover:bg-accent/50"
-                  onClick={() => handleViewDetails(order, false)}
-                >
-                  <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell>{order.customer}</TableCell>
-                  <TableCell>{order.items.length}</TableCell>
-                  <TableCell className="font-semibold">₹{order.total}</TableCell>
-                  <TableCell>
-                    <StatusBadge status={order.status} />
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {order.timeRemaining}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewDetails(order, false);
-                        }}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View Details
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={order.status === "out_for_delivery"}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          let nextStatus = "";
-                          if (order.status === "placed") {
-                            nextStatus = "preparing";
-                          } else if (order.status === "preparing") {
-                            nextStatus = "out_for_delivery";
-                          }
-                          if (nextStatus) {
-                            handleUpdateStatus(order.id, nextStatus);
-                          }
-                        }}
-                      >
-                        {order.status === "placed" && "Mark as Preparing"}
-                        {order.status === "preparing" && "Mark Out for Delivery"}
-                        {order.status === "out_for_delivery" && "Out for Delivery"}
-                      </Button>
-                    </div>
+              {activeOrders.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-4">
+                    No active orders
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                activeOrders.map((order: any) => (
+                  <TableRow
+                    key={order.id}
+                    className="cursor-pointer hover:bg-accent/50"
+                    onClick={() => handleViewDetails(order, false)}
+                  >
+                    <TableCell className="font-medium">{order.order_number}</TableCell>
+                    <TableCell>Customer</TableCell>
+                    <TableCell>{order.items?.length || 0}</TableCell>
+                    <TableCell className="font-semibold">₹{order.total}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={order.status} />
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {new Date(order.created_at).toLocaleTimeString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewDetails(order, false);
+                          }}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View Details
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -363,39 +306,31 @@ export default function VendorDashboard() {
             <CardTitle>Return Requests</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="p-3 rounded-lg border">
-              <div className="flex items-center justify-between mb-2">
-                <p className="font-medium">Order #ORD-003</p>
-                <StatusBadge status="delivered" />
-              </div>
-              <p className="text-sm text-muted-foreground mb-3">
-                Item: Organic Apples • Reason: Quality Issue
-              </p>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1"
-                  onClick={() => toast({
-                    title: "Return Rejected",
-                    description: "Return request for Order #ORD-003 has been rejected",
-                    variant: "destructive",
-                  })}
-                >
-                  Reject
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="flex-1"
-                  onClick={() => toast({
-                    title: "Return Approved",
-                    description: "Return request for Order #ORD-003 has been approved. Pickup will be scheduled.",
-                  })}
-                >
-                  Approve
-                </Button>
-              </div>
-            </div>
+            {pendingReturns.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">No pending return requests</p>
+            ) : (
+              pendingReturns.slice(0, 3).map((ret: any) => (
+                <div key={ret.id} className="p-3 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-medium">Return #{ret.id.slice(0, 8)}</p>
+                    <StatusBadge status={ret.status} />
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Order: {ret.orders?.order_number} • {ret.reason}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => window.location.href = '/vendor-returns'}
+                    >
+                      View Details
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       </div>

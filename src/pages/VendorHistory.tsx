@@ -20,68 +20,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-
-const mockHistory = [
-  {
-    id: "ORD-001",
-    customer: "John Doe",
-    items: 3,
-    total: "₹750",
-    status: "delivered" as const,
-    date: "2024-01-10",
-    completedAt: "14:30",
-  },
-  {
-    id: "ORD-002",
-    customer: "Jane Smith",
-    items: 5,
-    total: "₹1,200",
-    status: "delivered" as const,
-    date: "2024-01-12",
-    completedAt: "16:45",
-  },
-  {
-    id: "ORD-004",
-    customer: "Bob Wilson",
-    items: 2,
-    total: "₹450",
-    status: "canceled" as const,
-    date: "2024-01-13",
-    completedAt: "10:20",
-  },
-  {
-    id: "ORD-006",
-    customer: "Alice Brown",
-    items: 4,
-    total: "₹980",
-    status: "delivered" as const,
-    date: "2024-01-14",
-    completedAt: "12:15",
-  },
-  {
-    id: "ORD-009",
-    customer: "Charlie Davis",
-    items: 7,
-    total: "₹1,650",
-    status: "delivered" as const,
-    date: "2024-01-14",
-    completedAt: "18:00",
-  },
-];
+import { useVendorOrders } from "@/hooks/useVendorOrders";
 
 export default function VendorHistory() {
+  const { orders, isLoading } = useVendorOrders();
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState<string>("all");
 
-  const filteredHistory = mockHistory.filter((order) => {
+  const completedOrders = orders.filter((o: any) => 
+    ["delivered", "canceled"].includes(o.status)
+  );
+
+  const filteredHistory = completedOrders.filter((order: any) => {
     const matchesSearch =
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.toLowerCase().includes(searchTerm.toLowerCase());
+      order.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
 
     let matchesDate = true;
     if (dateFilter !== "all") {
       const today = new Date();
-      const orderDate = new Date(order.date);
+      const orderDate = new Date(order.created_at);
       if (dateFilter === "today") {
         matchesDate = orderDate.toDateString() === today.toDateString();
       } else if (dateFilter === "week") {
@@ -104,13 +61,21 @@ export default function VendorHistory() {
   };
 
   const totalRevenue = filteredHistory
-    .filter((order) => order.status === "delivered")
-    .reduce((sum, order) => sum + parseInt(order.total.replace(/[^0-9]/g, "")), 0);
+    .filter((order: any) => order.status === "delivered")
+    .reduce((sum: number, order: any) => sum + parseFloat(order.total || 0), 0);
 
   const totalOrders = filteredHistory.length;
-  const completedOrders = filteredHistory.filter(
-    (order) => order.status === "delivered"
+  const completedOrdersCount = filteredHistory.filter(
+    (order: any) => order.status === "delivered"
   ).length;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -140,7 +105,7 @@ export default function VendorHistory() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {completedOrders}
+              {completedOrdersCount}
             </div>
           </CardContent>
         </Card>
@@ -202,19 +167,29 @@ export default function VendorHistory() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredHistory.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell>{order.date}</TableCell>
-                  <TableCell className="text-sm">{order.completedAt}</TableCell>
-                  <TableCell>{order.customer}</TableCell>
-                  <TableCell>{order.items}</TableCell>
-                  <TableCell className="font-semibold">{order.total}</TableCell>
-                  <TableCell>
-                    <StatusBadge status={order.status} />
+              {filteredHistory.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-4">
+                    No order history found
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredHistory.map((order: any) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">{order.order_number}</TableCell>
+                    <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-sm">
+                      {new Date(order.created_at).toLocaleTimeString()}
+                    </TableCell>
+                    <TableCell>Customer</TableCell>
+                    <TableCell>{order.items?.length || 0}</TableCell>
+                    <TableCell className="font-semibold">₹{order.total}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={order.status} />
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
