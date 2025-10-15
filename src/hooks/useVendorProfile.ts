@@ -8,7 +8,7 @@ export const useVendorProfile = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data: vendor, isLoading } = useQuery({
+  const { data: vendor, isLoading, error } = useQuery({
     queryKey: ["vendor-profile", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -16,7 +16,7 @@ export const useVendorProfile = () => {
         .from("vendors")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       return data;
@@ -51,6 +51,7 @@ export const useVendorProfile = () => {
   return {
     vendor,
     isLoading,
+    error,
     updateVendor: updateVendor.mutate,
   };
 };

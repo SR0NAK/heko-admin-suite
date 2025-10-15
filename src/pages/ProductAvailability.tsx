@@ -14,9 +14,11 @@ import {
 } from "@/components/ui/table";
 import { AddProductToInventoryDialog } from "@/components/forms/AddProductToInventoryDialog";
 import { useVendorProducts } from "@/hooks/useVendorProducts";
+import { useVendorProfile } from "@/hooks/useVendorProfile";
 
 export default function ProductAvailability() {
   const [searchTerm, setSearchTerm] = useState("");
+  const { vendor } = useVendorProfile();
   const { 
     vendorProducts, 
     availableProducts,
@@ -55,6 +57,23 @@ export default function ProductAvailability() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!vendor) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>No Vendor Profile Found</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              You need a vendor profile to manage products. Please contact an administrator to set up your vendor account.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
