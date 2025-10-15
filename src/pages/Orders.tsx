@@ -13,18 +13,24 @@ import {
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Search, Pencil, Download } from "lucide-react";
-import { mockOrders } from "@/lib/mockData";
+import { useOrders } from "@/hooks/useOrders";
 
 export default function Orders() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [orders] = useState(mockOrders);
+  const { orders, isLoading } = useOrders();
 
-  const filteredOrders = orders.filter(
-    (order) =>
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.userName.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredOrders = orders.filter((order) =>
+    order.order_number.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -72,25 +78,25 @@ export default function Orders() {
             <TableBody>
               {filteredOrders.map((order) => (
                 <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.id}</TableCell>
+                  <TableCell className="font-medium">{order.order_number}</TableCell>
                   <TableCell>
                     <div>
-                      <div className="font-medium">{order.userName}</div>
+                      <div className="font-medium">Customer</div>
                       <div className="text-sm text-muted-foreground">
-                        {new Date(order.createdAt).toLocaleDateString()}
+                        {new Date(order.created_at).toLocaleDateString()}
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{order.items.length} items</TableCell>
+                  <TableCell>- items</TableCell>
                   <TableCell className="font-semibold">
                     ₹{order.total}
-                    {order.walletUsed > 0 && (
+                    {order.wallet_used > 0 && (
                       <div className="text-xs text-muted-foreground">
-                        (₹{order.walletUsed} from wallet)
+                        (₹{order.wallet_used} from wallet)
                       </div>
                     )}
                   </TableCell>
-                  <TableCell>{order.deliveryPartner || "Unassigned"}</TableCell>
+                  <TableCell>Unassigned</TableCell>
                   <TableCell>
                     <StatusBadge status={order.status} />
                   </TableCell>

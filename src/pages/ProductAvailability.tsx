@@ -13,92 +13,29 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ProductForm } from "@/components/forms/ProductForm";
-import { toast } from "@/hooks/use-toast";
-
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  stockQuantity: number;
-  isAvailable: boolean;
-  status: "active" | "paused" | "stopped";
-}
-
-const mockProducts: Product[] = [
-  {
-    id: "PRD-001",
-    name: "Organic Tomatoes",
-    category: "Vegetables",
-    price: 80,
-    stockQuantity: 50,
-    isAvailable: true,
-    status: "active",
-  },
-  {
-    id: "PRD-002",
-    name: "Fresh Milk",
-    category: "Dairy",
-    price: 60,
-    stockQuantity: 30,
-    isAvailable: true,
-    status: "active",
-  },
-  {
-    id: "PRD-003",
-    name: "Whole Wheat Bread",
-    category: "Bakery",
-    price: 45,
-    stockQuantity: 0,
-    isAvailable: false,
-    status: "stopped",
-  },
-  {
-    id: "PRD-004",
-    name: "Organic Apples",
-    category: "Fruits",
-    price: 120,
-    stockQuantity: 25,
-    isAvailable: true,
-    status: "paused",
-  },
-];
+import { useProducts } from "@/hooks/useProducts";
 
 export default function ProductAvailability() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [products, setProducts] = useState<Product[]>(mockProducts);
+  const { products, isLoading, updateProduct } = useProducts();
   const [formOpen, setFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
 
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase())
+      (product.categories && product.categories.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleToggleAvailability = (productId: string) => {
-    setProducts(
-      products.map((p) =>
-        p.id === productId ? { ...p, isAvailable: !p.isAvailable } : p
-      )
-    );
-    toast({
-      title: "Availability Updated",
-      description: "Product availability has been updated successfully",
-    });
+  const handleToggleAvailability = (productId: string, currentValue: boolean) => {
+    updateProduct({ id: productId, in_stock: !currentValue });
   };
 
   const handleStatusChange = (productId: string, newStatus: "active" | "paused" | "stopped") => {
-    setProducts(
-      products.map((p) => (p.id === productId ? { ...p, status: newStatus } : p))
-    );
-    toast({
-      title: "Status Updated",
-      description: `Product status changed to ${newStatus}`,
-    });
+    updateProduct({ id: productId, status: newStatus as "active" | "out_of_stock" });
   };
 
-  const handleEditProduct = (product: Product) => {
+  const handleEditProduct = (product: any) => {
     setEditingProduct(product);
     setFormOpen(true);
   };
@@ -109,31 +46,25 @@ export default function ProductAvailability() {
   };
 
   const handleSaveProduct = (product: any) => {
-    if (editingProduct) {
-      setProducts(products.map((p) => (p.id === editingProduct.id ? product : p)));
-      toast({
-        title: "Product Updated",
-        description: "Product has been updated successfully",
-      });
-    } else {
-      setProducts([...products, { ...product, id: `PRD-${products.length + 1}` }]);
-      toast({
-        title: "Product Added",
-        description: "New product has been added successfully",
-      });
-    }
     setFormOpen(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   const getStatusBadge = (status: string) => {
     const styles = {
       active: "bg-green-100 text-green-800",
-      paused: "bg-yellow-100 text-yellow-800",
-      stopped: "bg-red-100 text-red-800",
+      out_of_stock: "bg-red-100 text-red-800",
     };
     return (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${styles[status as keyof typeof styles]}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+      <span className={`px-2 py-1 rounded text-xs font-medium ${styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800'}`}>
+        {status === 'out_of_stock' ? 'Out of Stock' : status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
   };
@@ -184,25 +115,25 @@ export default function ProductAvailability() {
               {filteredProducts.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.category}</TableCell>
+                  <TableCell>{product.categories?.name || '-'}</TableCell>
                   <TableCell className="font-semibold">₹{product.price}</TableCell>
                   <TableCell>
                     <span
                       className={
-                        product.stockQuantity === 0
+                        product.stock_quantity === 0
                           ? "text-destructive font-medium"
-                          : product.stockQuantity < 20
+                          : product.stock_quantity < 20
                           ? "text-yellow-600 font-medium"
                           : ""
                       }
                     >
-                      {product.stockQuantity}
+                      {product.stock_quantity}
                     </span>
                   </TableCell>
                   <TableCell>
                     <Switch
-                      checked={product.isAvailable}
-                      onCheckedChange={() => handleToggleAvailability(product.id)}
+                      checked={product.in_stock}
+                      onCheckedChange={() => handleToggleAvailability(product.id, product.in_stock)}
                     />
                   </TableCell>
                   <TableCell>{getStatusBadge(product.status)}</TableCell>

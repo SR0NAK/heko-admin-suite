@@ -15,93 +15,41 @@ import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/MetricCard";
 import { VendorForm } from "@/components/forms/VendorForm";
 import { VendorDetailDialog } from "@/components/VendorDetailDialog";
-import { toast } from "sonner";
-
-const mockVendors = [
-  {
-    id: "V001",
-    name: "Fresh Mart",
-    email: "freshmart@example.com",
-    phone: "+91 9876543210",
-    address: "123 MG Road, Koramangala, Bangalore",
-    gst: "29ABCDE1234F1Z5",
-    category: "Grocery",
-    area: "Koramangala",
-    status: "active",
-    productsAssigned: 156,
-    totalProducts: 156,
-    ordersCompleted: 2341,
-    acceptanceRate: 94,
-    rating: 4.5,
-  },
-  {
-    id: "V002",
-    name: "Green Grocers",
-    email: "greengrocers@example.com",
-    phone: "+91 9876543211",
-    address: "456 100 Feet Road, Indiranagar, Bangalore",
-    gst: "29FGHIJ5678K1Z9",
-    category: "Organic",
-    area: "Indiranagar",
-    status: "active",
-    productsAssigned: 203,
-    totalProducts: 203,
-    ordersCompleted: 1876,
-    acceptanceRate: 89,
-    rating: 4.7,
-  },
-  {
-    id: "V003",
-    name: "Daily Fresh",
-    email: "dailyfresh@example.com",
-    phone: "+91 9876543212",
-    address: "789 ITPL Main Road, Whitefield, Bangalore",
-    gst: "29KLMNO9012P1Z3",
-    category: "Fresh Produce",
-    area: "Whitefield",
-    status: "inactive",
-    productsAssigned: 98,
-    totalProducts: 98,
-    ordersCompleted: 567,
-    acceptanceRate: 76,
-    rating: 4.2,
-  },
-];
+import { useVendors } from "@/hooks/useVendors";
 
 export default function Vendors() {
-  const [vendors, setVendors] = useState(mockVendors);
+  const { vendors, isLoading, createVendor, updateVendor } = useVendors();
   const [formOpen, setFormOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
-  const [editingVendor, setEditingVendor] = useState<typeof mockVendors[0] | undefined>();
-  const [selectedVendor, setSelectedVendor] = useState<typeof mockVendors[0] | null>(null);
+  const [editingVendor, setEditingVendor] = useState<any>(undefined);
+  const [selectedVendor, setSelectedVendor] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
   const filteredVendors = vendors.filter((vendor) => {
-    const matchesSearch = vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch = vendor.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       vendor.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      vendor.area.toLowerCase().includes(searchQuery.toLowerCase());
+      vendor.address.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter = filterStatus === "all" || vendor.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
   const handleSaveVendor = (vendor: any) => {
     if (editingVendor) {
-      setVendors(vendors.map(v => v.id === vendor.id ? vendor : v));
-      toast.success("Vendor updated successfully");
+      updateVendor(vendor);
     } else {
-      setVendors([...vendors, vendor]);
-      toast.success("Vendor added successfully");
+      createVendor(vendor);
     }
     setEditingVendor(undefined);
+    setFormOpen(false);
   };
 
-  const handleViewClick = (vendor: typeof mockVendors[0]) => {
+  const handleViewClick = (vendor: any) => {
     setSelectedVendor(vendor);
     setDetailOpen(true);
   };
 
-  const handleEditClick = (vendor: typeof mockVendors[0]) => {
+  const handleEditClick = (vendor: any) => {
     setEditingVendor(vendor);
     setFormOpen(true);
   };
@@ -118,6 +66,14 @@ export default function Vendors() {
     setEditingVendor(undefined);
     setFormOpen(true);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -195,17 +151,17 @@ export default function Vendors() {
               {filteredVendors.map((vendor) => (
                 <TableRow key={vendor.id}>
                   <TableCell className="font-medium">{vendor.id}</TableCell>
-                  <TableCell>{vendor.name}</TableCell>
+                  <TableCell>{vendor.business_name}</TableCell>
                   <TableCell>{vendor.phone}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <MapPin className="h-3 w-3" />
-                      {vendor.area}
+                      {vendor.address?.substring(0, 30)}...
                     </div>
                   </TableCell>
-                  <TableCell>{vendor.productsAssigned}</TableCell>
-                  <TableCell>{vendor.ordersCompleted}</TableCell>
-                  <TableCell>{vendor.acceptanceRate}%</TableCell>
+                  <TableCell>{vendor.total_orders || 0}</TableCell>
+                  <TableCell>{vendor.completed_orders || 0}</TableCell>
+                  <TableCell>{vendor.acceptance_rate || 0}%</TableCell>
                   <TableCell>
                     <Badge
                       variant={

@@ -13,14 +13,12 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, Eye, Ban, CheckCircle } from "lucide-react";
-import { mockUsers } from "@/lib/mockData";
-import { useToast } from "@/hooks/use-toast";
+import { useUsers } from "@/hooks/useUsers";
 
 export default function Users() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [users, setUsers] = useState(mockUsers);
+  const { users, isLoading, updateUserStatus } = useUsers();
 
   const filteredUsers = users.filter(
     (user) =>
@@ -29,14 +27,18 @@ export default function Users() {
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleToggleStatus = (userId: string) => {
-    setUsers(users.map(user => 
-      user.id === userId 
-        ? { ...user, status: user.status === 'active' ? 'blocked' : 'active' }
-        : user
-    ));
-    toast({ title: "User status updated" });
+  const handleToggleStatus = (userId: string, currentStatus: "active" | "inactive" | "blocked") => {
+    const newStatus: "active" | "inactive" | "blocked" = currentStatus === 'active' ? 'inactive' : 'active';
+    updateUserStatus({ userId, status: newStatus });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -94,16 +96,16 @@ export default function Users() {
                   <TableCell>{user.phone}</TableCell>
                   <TableCell>
                     <code className="bg-muted px-2 py-1 rounded text-xs">
-                      {user.referralCode}
+                      {user.referral_code}
                     </code>
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1 text-sm">
-                      <div>Virtual: ₹{user.virtualWallet}</div>
-                      <div>Actual: ₹{user.actualWallet}</div>
+                      <div>Virtual: ₹{user.virtual_wallet}</div>
+                      <div>Actual: ₹{user.actual_wallet}</div>
                     </div>
                   </TableCell>
-                  <TableCell>{user.totalOrders}</TableCell>
+                  <TableCell>-</TableCell>
                   <TableCell>
                     <Badge
                       variant={
@@ -118,7 +120,7 @@ export default function Users() {
                       <Button variant="ghost" size="icon" onClick={() => navigate(`/users/${user.id}`)}>
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleToggleStatus(user.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => handleToggleStatus(user.id, user.status)}>
                         {user.status === "active" ? (
                           <Ban className="h-4 w-4" />
                         ) : (
