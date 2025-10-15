@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Package, MapPin, Phone, Clock, CheckCircle2 } from "lucide-react";
+import { Package, MapPin, Clock, CheckCircle2 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,115 +13,69 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-interface Pickup {
-  id: string;
-  returnId: string;
-  customerName: string;
-  customerPhone: string;
-  pickupAddress: string;
-  vendorAddress: string;
-  status: "assigned" | "out_for_pickup" | "picked_up" | "delivered_to_vendor";
-  otp: string;
-  items: number;
-  refundAmount: number;
-  scheduledTime: string;
-}
-
-const mockPickups: Pickup[] = [
-  {
-    id: "PU001",
-    returnId: "RET001",
-    customerName: "Alice Johnson",
-    customerPhone: "+1234567892",
-    pickupAddress: "789 Customer Lane, City",
-    vendorAddress: "123 Vendor Plaza, City",
-    status: "assigned",
-    otp: "4321",
-    items: 2,
-    refundAmount: 599,
-    scheduledTime: "2024-01-16 10:00",
-  },
-  {
-    id: "PU002",
-    returnId: "RET002",
-    customerName: "Bob Williams",
-    customerPhone: "+1234567893",
-    pickupAddress: "456 Home Street, City",
-    vendorAddress: "789 Store Ave, City",
-    status: "out_for_pickup",
-    otp: "8765",
-    items: 1,
-    refundAmount: 299,
-    scheduledTime: "2024-01-16 11:30",
-  },
-];
-
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePickups } from "@/hooks/usePickups";
+import { format } from "date-fns";
 
 export default function Pickups() {
-  const [pickups, setPickups] = useState(mockPickups);
-  const [selectedPickup, setSelectedPickup] = useState<Pickup | null>(null);
+  const { pickups, isLoading, acceptPickup, verifyPickupOTP, deliverToVendor } = usePickups();
+  const [selectedPickup, setSelectedPickup] = useState<any>(null);
   const [showOtpDialog, setShowOtpDialog] = useState(false);
   const [otpInput, setOtpInput] = useState("");
 
-  const getStatusColor = (status: Pickup["status"]) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case "assigned":
+      case "approved":
         return "bg-blue-500";
-      case "out_for_pickup":
+      case "pickup_scheduled":
         return "bg-orange-500";
       case "picked_up":
         return "bg-yellow-500";
-      case "delivered_to_vendor":
+      case "completed":
         return "bg-green-500";
       default:
         return "bg-gray-500";
     }
   };
 
-  const handleAccept = (pickup: Pickup) => {
-    setPickups(
-      pickups.map((p) =>
-        p.id === pickup.id ? { ...p, status: "out_for_pickup" } : p
-      )
-    );
-    toast.success("Pickup accepted!");
-  };
-
-  const handleReject = (pickupId: string) => {
-    setPickups(pickups.filter((p) => p.id !== pickupId));
-    toast.success("Pickup rejected");
+  const handleAccept = (returnId: string) => {
+    acceptPickup(returnId);
   };
 
   const handleVerifyOtp = () => {
-    if (selectedPickup && otpInput === selectedPickup.otp) {
-      setPickups(
-        pickups.map((p) =>
-          p.id === selectedPickup.id ? { ...p, status: "picked_up" } : p
-        )
-      );
-      toast.success("Item picked up successfully!");
+    if (selectedPickup && otpInput) {
+      verifyPickupOTP({ returnId: selectedPickup.id, otp: otpInput });
       setShowOtpDialog(false);
       setOtpInput("");
       setSelectedPickup(null);
     } else {
-      toast.error("Invalid OTP. Please try again.");
+      toast.error("Please enter OTP");
     }
   };
 
-  const handleDeliverToVendor = (pickup: Pickup) => {
-    setPickups(
-      pickups.map((p) =>
-        p.id === pickup.id ? { ...p, status: "delivered_to_vendor" } : p
-      )
-    );
-    toast.success("Return delivered to vendor!");
+  const handleDeliverToVendor = (returnId: string) => {
+    deliverToVendor(returnId);
   };
 
-  const openOtpDialog = (pickup: Pickup) => {
+  const openOtpDialog = (pickup: any) => {
     setSelectedPickup(pickup);
     setShowOtpDialog(true);
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-12 w-64" />
+          <div className="grid gap-4">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-64" />
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -136,9 +90,9 @@ export default function Pickups() {
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Package className="h-5 w-5" />
-                      {pickup.returnId}
+                      Return #{pickup.id.slice(0, 8)}
                     </CardTitle>
-                    <CardDescription>{pickup.customerName}</CardDescription>
+                    <CardDescription>Order #{pickup.orders?.order_number}</CardDescription>
                   </div>
                   <Badge className={getStatusColor(pickup.status)}>
                     {pickup.status.replace(/_/g, " ").toUpperCase()}
@@ -151,51 +105,42 @@ export default function Pickups() {
                     <MapPin className="h-4 w-4 mt-0.5 text-red-500" />
                     <div>
                       <p className="font-medium">Pickup from Customer</p>
-                      <p className="text-muted-foreground">{pickup.pickupAddress}</p>
+                      <p className="text-muted-foreground">Customer Address</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
                     <MapPin className="h-4 w-4 mt-0.5 text-green-500" />
                     <div>
                       <p className="font-medium">Deliver to Vendor</p>
-                      <p className="text-muted-foreground">{pickup.vendorAddress}</p>
+                      <p className="text-muted-foreground">{pickup.vendors?.address || "Vendor address"}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{pickup.customerPhone}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>{pickup.scheduledTime}</span>
+                    <span>
+                      {pickup.pickup_scheduled_at 
+                        ? format(new Date(pickup.pickup_scheduled_at), "MMM dd, yyyy HH:mm")
+                        : "Not scheduled"}
+                    </span>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t">
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      {pickup.items} items • Refund: ₹{pickup.refundAmount}
+                      {pickup.return_items?.length || 0} items • Refund: ₹{pickup.refund_amount || 0}
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    {pickup.status === "assigned" && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleReject(pickup.id)}
-                        >
-                          Reject
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleAccept(pickup)}
-                        >
-                          Accept
-                        </Button>
-                      </>
+                    {pickup.status === "approved" && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleAccept(pickup.id)}
+                      >
+                        Accept Pickup
+                      </Button>
                     )}
-                    {pickup.status === "out_for_pickup" && (
+                    {pickup.status === "pickup_scheduled" && (
                       <Button
                         size="sm"
                         onClick={() => openOtpDialog(pickup)}
@@ -206,12 +151,12 @@ export default function Pickups() {
                     {pickup.status === "picked_up" && (
                       <Button
                         size="sm"
-                        onClick={() => handleDeliverToVendor(pickup)}
+                        onClick={() => handleDeliverToVendor(pickup.id)}
                       >
                         Deliver to Vendor
                       </Button>
                     )}
-                    {pickup.status === "delivered_to_vendor" && (
+                    {pickup.status === "completed" && (
                       <Badge variant="outline" className="gap-1">
                         <CheckCircle2 className="h-3 w-3" />
                         Completed
@@ -243,14 +188,11 @@ export default function Pickups() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Demo OTP: {selectedPickup?.otp}
-                </p>
                 <Input
                   placeholder="Enter OTP"
                   value={otpInput}
                   onChange={(e) => setOtpInput(e.target.value)}
-                  maxLength={4}
+                  maxLength={6}
                 />
               </div>
               <Button onClick={handleVerifyOtp} className="w-full">
