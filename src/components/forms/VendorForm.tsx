@@ -61,11 +61,10 @@ export function VendorForm({ open, onOpenChange, vendor, onSave }: VendorFormPro
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const vendorToSave = {
-      ...formData,
-      id: formData.id || `V${Date.now()}`,
-    };
-    onSave(vendorToSave);
+    // Remove id for new vendors, let database generate UUID
+    const { id, ...vendorData } = formData;
+    const vendorToSave = vendor ? { ...vendorData, id } : vendorData;
+    onSave(vendorToSave as Vendor);
     onOpenChange(false);
   };
 

@@ -61,11 +61,10 @@ export function DeliveryPartnerForm({ open, onOpenChange, partner, onSave }: Del
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const partnerToSave = {
-      ...formData,
-      id: formData.id || `DP${Date.now()}`,
-    };
-    onSave(partnerToSave);
+    // Remove id for new delivery partners, let database generate UUID
+    const { id, ...partnerData } = formData;
+    const partnerToSave = partner ? { ...partnerData, id } : partnerData;
+    onSave(partnerToSave as DeliveryPartner);
     onOpenChange(false);
   };
 

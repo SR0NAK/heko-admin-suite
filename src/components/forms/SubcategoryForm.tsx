@@ -43,7 +43,10 @@ export function SubcategoryForm({ open, onOpenChange, subcategory, onSave, categ
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    // Remove id for new subcategories, let database generate UUID
+    const { id, ...subcategoryData } = formData;
+    const subcategoryToSave = subcategory ? { ...subcategoryData, id } : subcategoryData;
+    onSave(subcategoryToSave as Subcategory);
     onOpenChange(false);
   };
 
