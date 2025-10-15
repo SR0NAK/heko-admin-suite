@@ -31,30 +31,38 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useDeliveryProfile } from "@/hooks/useDeliveryProfile";
+import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DeliveryProfile() {
-  const [isOnline, setIsOnline] = useState(true);
+  const { profile, isLoading, updateProfile } = useDeliveryProfile();
+  const { signOut } = useAuth();
   const [notifications, setNotifications] = useState(true);
   const [language, setLanguage] = useState("english");
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleToggleOnline = () => {
-    setIsOnline(!isOnline);
-    toast({
-      title: !isOnline ? "You're now Online" : "You're now Offline",
-      description: !isOnline 
-        ? "You can now receive delivery assignments" 
-        : "You won't receive new assignments",
-    });
+    if (profile) {
+      const newStatus = profile.status === "active" ? "inactive" : "active";
+      updateProfile({ status: newStatus });
+      toast({
+        title: newStatus === "active" ? "You're now Online" : "You're now Offline",
+        description: newStatus === "active"
+          ? "You can now receive delivery assignments" 
+          : "You won't receive new assignments",
+      });
+    }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
     toast({
       title: "Logged out successfully",
       description: "See you next time!",
     });
-    setTimeout(() => navigate("/login"), 1000);
+    navigate("/login");
   };
 
   const handleNotificationToggle = () => {
@@ -71,6 +79,36 @@ export default function DeliveryProfile() {
       description: `Language changed to ${value}`,
     });
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-12 w-64" />
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-48" />
+          ))}
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <h1 className="text-3xl font-bold">Profile</h1>
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-muted-foreground text-center">
+                No delivery partner profile found. Please contact administrator.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -89,15 +127,15 @@ export default function DeliveryProfile() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`h-3 w-3 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+                <div className={`h-3 w-3 rounded-full ${profile.status === "active" ? 'bg-green-500' : 'bg-gray-400'}`} />
                 <div>
-                  <p className="font-medium">{isOnline ? "Online" : "Offline"}</p>
+                  <p className="font-medium">{profile.status === "active" ? "Online" : "Offline"}</p>
                   <p className="text-sm text-muted-foreground">
-                    {isOnline ? "Available for deliveries" : "Not accepting assignments"}
+                    {profile.status === "active" ? "Available for deliveries" : "Not accepting assignments"}
                   </p>
                 </div>
               </div>
-              <Switch checked={isOnline} onCheckedChange={handleToggleOnline} />
+              <Switch checked={profile.status === "active"} onCheckedChange={handleToggleOnline} />
             </div>
           </CardContent>
         </Card>
@@ -116,28 +154,32 @@ export default function DeliveryProfile() {
                 <User className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Name</p>
-                  <p className="font-medium">Rajesh Kumar</p>
+                  <p className="font-medium">{profile.name}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Phone</p>
-                  <p className="font-medium">+91 98765 43210</p>
+                  <p className="font-medium">{profile.phone}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">rajesh.kumar@example.com</p>
+                  <p className="font-medium">{profile.email || "N/A"}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Location</p>
-                  <p className="font-medium">Mumbai, Maharashtra</p>
+                  <p className="font-medium">
+                    {profile.latitude && profile.longitude 
+                      ? `${profile.latitude}, ${profile.longitude}` 
+                      : "Not set"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -176,7 +218,9 @@ export default function DeliveryProfile() {
                   <Car className="h-5 w-5 text-blue-500" />
                   <div>
                     <p className="font-medium">Vehicle Registration</p>
-                    <p className="text-sm text-muted-foreground">MH02AB1234 - Honda Activa</p>
+                    <p className="text-sm text-muted-foreground">
+                      {profile.vehicle_number ? `${profile.vehicle_number} - ${profile.vehicle_type}` : "Not set"}
+                    </p>
                   </div>
                 </div>
                 <Badge variant="default" className="bg-green-500">
