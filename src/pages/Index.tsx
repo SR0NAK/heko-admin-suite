@@ -10,7 +10,7 @@ export default function Index() {
     <>
       {currentRole === "admin" && <AdminDashboard />}
       {currentRole === "vendor" && <VendorDashboard />}
-      {currentRole === "delivery" && <DeliveryDashboard />}
+      {currentRole === "delivery_partner" && <DeliveryDashboard />}
     </>
   );
 }

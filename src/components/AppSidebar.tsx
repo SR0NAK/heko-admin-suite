@@ -75,7 +75,9 @@ export function AppSidebar({ currentRole, onRoleChange }: AppSidebarProps) {
       ? adminMenuItems
       : currentRole === "vendor"
       ? vendorMenuItems
-      : deliveryMenuItems;
+      : currentRole === "delivery_partner"
+      ? deliveryMenuItems
+      : adminMenuItems; // default to admin
 
   return (
     <Sidebar className="border-r">
