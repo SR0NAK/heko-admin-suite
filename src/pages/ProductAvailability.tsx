@@ -12,41 +12,43 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ProductForm } from "@/components/forms/ProductForm";
-import { useProducts } from "@/hooks/useProducts";
+import { AddProductToInventoryDialog } from "@/components/forms/AddProductToInventoryDialog";
+import { useVendorProducts } from "@/hooks/useVendorProducts";
 
 export default function ProductAvailability() {
   const [searchTerm, setSearchTerm] = useState("");
-  const { products, isLoading, updateProduct } = useProducts();
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const { 
+    vendorProducts, 
+    availableProducts,
+    isLoading, 
+    updateVendorProduct,
+    addProductToInventory 
+  } = useVendorProducts();
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.categories && product.categories.name.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredProducts = vendorProducts.filter((vp: any) => {
+    const productName = vp.products?.name || '';
+    const categoryName = vp.products?.categories?.name || '';
+    return (
+      productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      categoryName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
-  const handleToggleAvailability = (productId: string, currentValue: boolean) => {
-    updateProduct({ id: productId, in_stock: !currentValue });
+  const handleToggleAvailability = (vendorProductId: string, currentValue: boolean) => {
+    updateVendorProduct({ id: vendorProductId, is_available: !currentValue });
   };
 
-  const handleStatusChange = (productId: string, newStatus: "active" | "paused" | "stopped") => {
-    updateProduct({ id: productId, status: newStatus as "active" | "out_of_stock" });
-  };
-
-  const handleEditProduct = (product: any) => {
-    setEditingProduct(product);
-    setFormOpen(true);
+  const handleUpdateStock = (vendorProductId: string, newStock: number) => {
+    updateVendorProduct({ id: vendorProductId, stock_quantity: newStock });
   };
 
   const handleAddProduct = () => {
-    setEditingProduct(null);
-    setFormOpen(true);
+    setAddDialogOpen(true);
   };
 
-  const handleSaveProduct = (product: any) => {
-    setFormOpen(false);
+  const handleAddToInventory = (productId: string, stockQuantity: number) => {
+    addProductToInventory({ productId, stockQuantity });
   };
 
   if (isLoading) {
@@ -57,17 +59,6 @@ export default function ProductAvailability() {
     );
   }
 
-  const getStatusBadge = (status: string) => {
-    const styles = {
-      active: "bg-green-100 text-green-800",
-      out_of_stock: "bg-red-100 text-red-800",
-    };
-    return (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800'}`}>
-        {status === 'out_of_stock' ? 'Out of Stock' : status.charAt(0).toUpperCase() + status.slice(1)}
-      </span>
-    );
-  };
 
   return (
     <div className="space-y-6">
@@ -105,95 +96,64 @@ export default function ProductAvailability() {
                 <TableHead>Product</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
-                <TableHead>Stock</TableHead>
+                <TableHead>Your Stock</TableHead>
                 <TableHead>Available</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProducts.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.categories?.name || '-'}</TableCell>
-                  <TableCell className="font-semibold">₹{product.price}</TableCell>
-                  <TableCell>
-                    <span
-                      className={
-                        product.stock_quantity === 0
-                          ? "text-destructive font-medium"
-                          : product.stock_quantity < 20
-                          ? "text-yellow-600 font-medium"
-                          : ""
-                      }
-                    >
-                      {product.stock_quantity}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={product.in_stock}
-                      onCheckedChange={() => handleToggleAvailability(product.id, product.in_stock)}
-                    />
-                  </TableCell>
-                  <TableCell>{getStatusBadge(product.status)}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditProduct(product)}
-                      >
-                        Edit
-                      </Button>
-                      {product.status === "active" && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleStatusChange(product.id, "paused")}
-                        >
-                          Pause
-                        </Button>
-                      )}
-                      {product.status === "paused" && (
-                        <>
-                          <Button
-                            size="sm"
-                            onClick={() => handleStatusChange(product.id, "active")}
-                          >
-                            Resume
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleStatusChange(product.id, "stopped")}
-                          >
-                            Stop
-                          </Button>
-                        </>
-                      )}
-                      {product.status === "stopped" && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleStatusChange(product.id, "active")}
-                        >
-                          Activate
-                        </Button>
-                      )}
-                    </div>
+              {filteredProducts.map((vp: any) => {
+                const product = vp.products;
+                return (
+                  <TableRow key={vp.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        {product?.images?.[0] && (
+                          <img
+                            src={product.images[0]}
+                            alt={product.name}
+                            className="w-10 h-10 object-cover rounded"
+                          />
+                        )}
+                        <span className="font-medium">{product?.name || '-'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{product?.categories?.name || '-'}</TableCell>
+                    <TableCell className="font-semibold">₹{product?.price || 0}</TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={vp.stock_quantity}
+                        onChange={(e) => handleUpdateStock(vp.id, Number(e.target.value))}
+                        className="w-24"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={vp.is_available}
+                        onCheckedChange={() => handleToggleAvailability(vp.id, vp.is_available)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {filteredProducts.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    No products in your inventory. Click "Add Product" to get started.
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
 
-      <ProductForm
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        product={editingProduct}
-        onSave={handleSaveProduct}
+      <AddProductToInventoryDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        availableProducts={availableProducts}
+        onAdd={handleAddToInventory}
       />
     </div>
   );
