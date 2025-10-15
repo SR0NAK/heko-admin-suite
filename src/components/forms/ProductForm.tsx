@@ -7,19 +7,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { X, Upload } from "lucide-react";
+import { useCategories, useSubcategories } from "@/hooks/useCMS";
 
 interface Product {
-  id: string;
+  id?: string;
   name: string;
   description: string;
   price: number;
   mrp: number;
   discount: number;
   unit: string;
-  category: string;
-  subcategory: string;
-  inStock: boolean;
-  stockQuantity: number;
+  category_id: string;
+  subcategory_id: string;
+  in_stock: boolean;
+  stock_quantity: number;
   tags: string[];
   images?: string[];
 }
@@ -32,18 +33,20 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ open, onOpenChange, product, onSave }: ProductFormProps) {
+  const { categories } = useCategories();
+  const { subcategories } = useSubcategories();
+  
   const [formData, setFormData] = useState<Product>({
-    id: '',
     name: '',
     description: '',
     price: 0,
     mrp: 0,
     discount: 0,
     unit: '',
-    category: '',
-    subcategory: '',
-    inStock: true,
-    stockQuantity: 0,
+    category_id: '',
+    subcategory_id: '',
+    in_stock: true,
+    stock_quantity: 0,
     tags: [],
     images: [],
   });
@@ -51,20 +54,32 @@ export function ProductForm({ open, onOpenChange, product, onSave }: ProductForm
   // Update form data when product prop changes
   useEffect(() => {
     if (product) {
-      setFormData(product);
+      setFormData({
+        name: product.name || '',
+        description: product.description || '',
+        price: product.price || 0,
+        mrp: product.mrp || 0,
+        discount: product.discount || 0,
+        unit: product.unit || '',
+        category_id: product.category_id || '',
+        subcategory_id: product.subcategory_id || '',
+        in_stock: product.in_stock ?? true,
+        stock_quantity: product.stock_quantity || 0,
+        tags: product.tags || [],
+        images: product.images || [],
+      });
     } else {
       setFormData({
-        id: '',
         name: '',
         description: '',
         price: 0,
         mrp: 0,
         discount: 0,
         unit: '',
-        category: '',
-        subcategory: '',
-        inStock: true,
-        stockQuantity: 0,
+        category_id: '',
+        subcategory_id: '',
+        in_stock: true,
+        stock_quantity: 0,
         tags: [],
         images: [],
       });
@@ -88,11 +103,10 @@ export function ProductForm({ open, onOpenChange, product, onSave }: ProductForm
     e.preventDefault();
     const productToSave = {
       ...formData,
-      id: formData.id || `P${Date.now()}`,
       discount: Math.round(((formData.mrp - formData.price) / formData.mrp) * 100),
+      status: 'active',
     };
     onSave(productToSave);
-    onOpenChange(false);
   };
 
   return (
@@ -115,20 +129,76 @@ export function ProductForm({ open, onOpenChange, product, onSave }: ProductForm
             <div className="space-y-2">
               <Label htmlFor="category">Category *</Label>
               <Select
-                value={formData.category}
-                onValueChange={(value) => setFormData({ ...formData, category: value })}
+                value={formData.category_id}
+                onValueChange={(value) => setFormData({ ...formData, category_id: value, subcategory_id: '' })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Fruits">Fruits</SelectItem>
-                  <SelectItem value="Vegetables">Vegetables</SelectItem>
-                  <SelectItem value="Dairy">Dairy</SelectItem>
-                  <SelectItem value="Bakery">Bakery</SelectItem>
-                  <SelectItem value="Snacks">Snacks</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="subcategory">Subcategory</Label>
+            <Select
+              value={formData.subcategory_id}
+              onValueChange={(value) => setFormData({ ...formData, subcategory_id: value })}
+              disabled={!formData.category_id}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select subcategory" />
+              </SelectTrigger>
+              <SelectContent>
+                {subcategories
+                  .filter((sub) => sub.category_id === formData.category_id)
+                  .map((sub) => (
+                    <SelectItem key={sub.id} value={sub.id}>
+                      {sub.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="unit">Unit *</Label>
+            <Input
+              id="unit"
+              required
+              placeholder="e.g., 1 kg, 500g"
+              value={formData.unit}
+              onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+            />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="mrp">MRP *</Label>
+              <Input
+                id="mrp"
+                type="number"
+                required
+                value={formData.mrp}
+                onChange={(e) => setFormData({ ...formData, mrp: Number(e.target.value) })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="price">Selling Price *</Label>
+              <Input
+                id="price"
+                type="number"
+                required
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+              />
             </div>
           </div>
 
@@ -189,56 +259,24 @@ export function ProductForm({ open, onOpenChange, product, onSave }: ProductForm
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="mrp">MRP *</Label>
-              <Input
-                id="mrp"
-                type="number"
-                required
-                value={formData.mrp}
-                onChange={(e) => setFormData({ ...formData, mrp: Number(e.target.value) })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="price">Selling Price *</Label>
-              <Input
-                id="price"
-                type="number"
-                required
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="unit">Unit *</Label>
-              <Input
-                id="unit"
-                required
-                placeholder="e.g., 1 kg, 500g"
-                value={formData.unit}
-                onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-              />
-            </div>
-          </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="stockQuantity">Stock Quantity *</Label>
+              <Label htmlFor="stock_quantity">Stock Quantity *</Label>
               <Input
-                id="stockQuantity"
+                id="stock_quantity"
                 type="number"
                 required
-                value={formData.stockQuantity}
-                onChange={(e) => setFormData({ ...formData, stockQuantity: Number(e.target.value) })}
+                value={formData.stock_quantity}
+                onChange={(e) => setFormData({ ...formData, stock_quantity: Number(e.target.value) })}
               />
             </div>
             <div className="flex items-center justify-between space-y-2 pt-8">
-              <Label htmlFor="inStock">In Stock</Label>
+              <Label htmlFor="in_stock">In Stock</Label>
               <Switch
-                id="inStock"
-                checked={formData.inStock}
-                onCheckedChange={(checked) => setFormData({ ...formData, inStock: checked })}
+                id="in_stock"
+                checked={formData.in_stock}
+                onCheckedChange={(checked) => setFormData({ ...formData, in_stock: checked })}
               />
             </div>
           </div>

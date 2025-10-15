@@ -12,9 +12,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus, Edit, Trash2, Package } from "lucide-react";
-import { mockProducts } from "@/lib/mockData";
 import { ProductForm } from "@/components/forms/ProductForm";
-import { useToast } from "@/hooks/use-toast";
+import { useProducts } from "@/hooks/useProducts";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,27 +27,26 @@ import {
 
 export default function Products() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [products, setProducts] = useState(mockProducts);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const { toast } = useToast();
+  
+  const { products, isLoading, createProduct, updateProduct, deleteProduct } = useProducts();
 
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase())
+      (product.categories?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleSaveProduct = (product: any) => {
+  const handleSaveProduct = (productData: any) => {
     if (editingProduct) {
-      setProducts(products.map(p => p.id === product.id ? product : p));
-      toast({ title: "Product updated successfully" });
+      updateProduct({ id: editingProduct.id, ...productData });
     } else {
-      setProducts([...products, product]);
-      toast({ title: "Product added successfully" });
+      createProduct(productData);
     }
     setEditingProduct(null);
+    setIsFormOpen(false);
   };
 
   const handleEditClick = (product: any) => {
@@ -63,8 +61,7 @@ export default function Products() {
 
   const handleDeleteConfirm = () => {
     if (deleteId) {
-      setProducts(products.filter(p => p.id !== deleteId));
-      toast({ title: "Product deleted successfully" });
+      deleteProduct(deleteId);
       setDeleteId(null);
     }
   };
@@ -103,7 +100,7 @@ export default function Products() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {products.filter((p) => p.inStock).length}
+              {products.filter((p) => p.in_stock).length}
             </div>
           </CardContent>
         </Card>
@@ -114,7 +111,7 @@ export default function Products() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {products.filter((p) => !p.inStock).length}
+              {products.filter((p) => !p.in_stock).length}
             </div>
           </CardContent>
         </Card>
@@ -125,7 +122,7 @@ export default function Products() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {products.filter((p) => p.stockQuantity < 20).length}
+              {products.filter((p) => (p.stock_quantity || 0) < 20).length}
             </div>
           </CardContent>
         </Card>
@@ -178,9 +175,9 @@ export default function Products() {
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      <div>{product.category}</div>
+                      <div>{product.categories?.name || 'N/A'}</div>
                       <div className="text-muted-foreground">
-                        {product.subcategory}
+                        {product.subcategories?.name || 'N/A'}
                       </div>
                     </div>
                   </TableCell>
@@ -195,13 +192,13 @@ export default function Products() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm">{product.stockQuantity} units</div>
+                    <div className="text-sm">{product.stock_quantity || 0} units</div>
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant={product.inStock ? "default" : "destructive"}
+                      variant={product.in_stock ? "default" : "destructive"}
                     >
-                      {product.inStock ? "In Stock" : "Out of Stock"}
+                      {product.in_stock ? "In Stock" : "Out of Stock"}
                     </Badge>
                   </TableCell>
                   <TableCell>
