@@ -16,85 +16,17 @@ import { MetricCard } from "@/components/MetricCard";
 import { BannerForm } from "@/components/forms/BannerForm";
 import { CategoryForm } from "@/components/forms/CategoryForm";
 import { SubcategoryForm } from "@/components/forms/SubcategoryForm";
-import { toast } from "sonner";
-
-const mockBanners = [
-  {
-    id: "1",
-    title: "Summer Sale",
-    subtitle: "Up to 50% off on fresh fruits",
-    image: "/placeholder.svg",
-    action: "/category/fruits",
-    active: true,
-    order: 1,
-  },
-  {
-    id: "2",
-    title: "New Arrivals",
-    subtitle: "Exotic vegetables now available",
-    image: "/placeholder.svg",
-    action: "/category/vegetables",
-    active: true,
-    order: 2,
-  },
-  {
-    id: "3",
-    title: "Organic Special",
-    subtitle: "100% organic products",
-    image: "/placeholder.svg",
-    action: "/category/organic",
-    active: false,
-    order: 3,
-  },
-];
-
-const mockCategories = [
-  {
-    id: "1",
-    name: "Fruits & Vegetables",
-    image: "/placeholder.svg",
-    subcategories: ["Fruits", "Vegetables", "Herbs"],
-    order: 1,
-  },
-  {
-    id: "2",
-    name: "Dairy & Eggs",
-    image: "/placeholder.svg",
-    subcategories: ["Milk", "Cheese", "Eggs", "Yogurt"],
-    order: 2,
-  },
-  {
-    id: "3",
-    name: "Beverages",
-    image: "/placeholder.svg",
-    subcategories: ["Soft Drinks", "Juices", "Tea & Coffee"],
-    order: 3,
-  },
-];
-
-const mockSubcategories = [
-  { id: "1", name: "Fresh Fruits", categoryId: "1", categoryName: "Fruits & Vegetables", productsCount: 45, order: 1 },
-  { id: "2", name: "Fresh Vegetables", categoryId: "1", categoryName: "Fruits & Vegetables", productsCount: 38, order: 2 },
-  { id: "3", name: "Herbs", categoryId: "1", categoryName: "Fruits & Vegetables", productsCount: 12, order: 3 },
-  { id: "4", name: "Milk", categoryId: "2", categoryName: "Dairy & Eggs", productsCount: 15, order: 1 },
-  { id: "5", name: "Cheese", categoryId: "2", categoryName: "Dairy & Eggs", productsCount: 22, order: 2 },
-  { id: "6", name: "Eggs", categoryId: "2", categoryName: "Dairy & Eggs", productsCount: 8, order: 3 },
-  { id: "7", name: "Yogurt", categoryId: "2", categoryName: "Dairy & Eggs", productsCount: 18, order: 4 },
-  { id: "8", name: "Soft Drinks", categoryId: "3", categoryName: "Beverages", productsCount: 25, order: 1 },
-  { id: "9", name: "Juices", categoryId: "3", categoryName: "Beverages", productsCount: 20, order: 2 },
-  { id: "10", name: "Tea & Coffee", categoryId: "3", categoryName: "Beverages", productsCount: 30, order: 3 },
-];
+import { useCMS } from "@/hooks/useCMS";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CMS() {
-  const [banners, setBanners] = useState(mockBanners);
-  const [categories, setCategories] = useState(mockCategories);
-  const [subcategories, setSubcategories] = useState(mockSubcategories);
+  const { banners, categories, subcategories, isLoading, createBanner, updateBanner, deleteBanner, createCategory, updateCategory, deleteCategory, createSubcategory, updateSubcategory, deleteSubcategory } = useCMS();
   const [bannerFormOpen, setBannerFormOpen] = useState(false);
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [subcategoryFormOpen, setSubcategoryFormOpen] = useState(false);
-  const [editingBanner, setEditingBanner] = useState<typeof mockBanners[0] | undefined>();
-  const [editingCategory, setEditingCategory] = useState<typeof mockCategories[0] | undefined>();
-  const [editingSubcategory, setEditingSubcategory] = useState<typeof mockSubcategories[0] | undefined>();
+  const [editingBanner, setEditingBanner] = useState<any>();
+  const [editingCategory, setEditingCategory] = useState<any>();
+  const [editingSubcategory, setEditingSubcategory] = useState<any>();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
 
@@ -103,23 +35,20 @@ export default function CMS() {
     setBannerFormOpen(true);
   };
 
-  const handleEditBanner = (banner: typeof mockBanners[0]) => {
+  const handleEditBanner = (banner: any) => {
     setEditingBanner(banner);
     setBannerFormOpen(true);
   };
 
   const handleDeleteBanner = (id: string) => {
-    setBanners(banners.filter(b => b.id !== id));
-    toast.success("Banner deleted successfully");
+    deleteBanner(id);
   };
 
   const handleSaveBanner = (banner: any) => {
     if (editingBanner) {
-      setBanners(banners.map(b => b.id === banner.id ? banner : b));
-      toast.success("Banner updated successfully");
+      updateBanner({ id: banner.id, ...banner });
     } else {
-      setBanners([...banners, banner]);
-      toast.success("Banner added successfully");
+      createBanner(banner);
     }
     setEditingBanner(undefined);
   };
@@ -129,23 +58,20 @@ export default function CMS() {
     setCategoryFormOpen(true);
   };
 
-  const handleEditCategory = (category: typeof mockCategories[0]) => {
+  const handleEditCategory = (category: any) => {
     setEditingCategory(category);
     setCategoryFormOpen(true);
   };
 
   const handleDeleteCategory = (id: string) => {
-    setCategories(categories.filter(c => c.id !== id));
-    toast.success("Category deleted successfully");
+    deleteCategory(id);
   };
 
   const handleSaveCategory = (category: any) => {
     if (editingCategory) {
-      setCategories(categories.map(c => c.id === category.id ? category : c));
-      toast.success("Category updated successfully");
+      updateCategory({ id: category.id, ...category });
     } else {
-      setCategories([...categories, category]);
-      toast.success("Category added successfully");
+      createCategory(category);
     }
     setEditingCategory(undefined);
   };
@@ -155,33 +81,42 @@ export default function CMS() {
     setSubcategoryFormOpen(true);
   };
 
-  const handleEditSubcategory = (subcategory: typeof mockSubcategories[0]) => {
+  const handleEditSubcategory = (subcategory: any) => {
     setEditingSubcategory(subcategory);
     setSubcategoryFormOpen(true);
   };
 
   const handleDeleteSubcategory = (id: string) => {
-    setSubcategories(subcategories.filter(s => s.id !== id));
-    toast.success("Subcategory deleted successfully");
+    deleteSubcategory(id);
   };
 
   const handleSaveSubcategory = (subcategory: any) => {
     if (editingSubcategory) {
-      setSubcategories(subcategories.map(s => s.id === subcategory.id ? subcategory : s));
-      toast.success("Subcategory updated successfully");
+      updateSubcategory({ id: subcategory.id, ...subcategory });
     } else {
-      setSubcategories([...subcategories, subcategory]);
-      toast.success("Subcategory added successfully");
+      createSubcategory(subcategory);
     }
     setEditingSubcategory(undefined);
   };
 
   const filteredSubcategories = subcategories.filter(sub => {
-    const matchesSearch = sub.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sub.categoryName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filterCategory === "all" || sub.categoryId === filterCategory;
+    const matchesSearch = sub.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = filterCategory === "all" || sub.category_id === filterCategory;
     return matchesSearch && matchesFilter;
   });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-12 w-64" />
+        <div className="grid gap-4 md:grid-cols-3">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -197,17 +132,17 @@ export default function CMS() {
       <div className="grid gap-4 md:grid-cols-3">
         <MetricCard
           title="Active Banners"
-          value="2"
+          value={banners.filter(b => b.active).length.toString()}
           icon={Image}
         />
         <MetricCard
           title="Categories"
-          value="12"
+          value={categories.length.toString()}
           icon={Grid3x3}
         />
         <MetricCard
-          title="Total Products"
-          value="456"
+          title="Subcategories"
+          value={subcategories.length.toString()}
           icon={Grid3x3}
         />
       </div>
@@ -237,8 +172,8 @@ export default function CMS() {
             </TableHeader>
             <TableBody>
               {banners.map((banner) => (
-                <TableRow key={banner.id}>
-                  <TableCell className="font-medium">{banner.order}</TableCell>
+                 <TableRow key={banner.id}>
+                  <TableCell className="font-medium">{banner.display_order}</TableCell>
                   <TableCell>
                     <div className="h-12 w-20 bg-muted rounded overflow-hidden">
                       <img
@@ -253,7 +188,7 @@ export default function CMS() {
                     {banner.subtitle}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {banner.action || "-"}
+                    {banner.action_value || "-"}
                   </TableCell>
                   <TableCell>
                     <Badge variant={banner.active ? "default" : "secondary"}>
@@ -300,8 +235,8 @@ export default function CMS() {
             </TableHeader>
             <TableBody>
               {categories.map((category) => (
-                <TableRow key={category.id}>
-                  <TableCell className="font-medium">{category.order}</TableCell>
+                 <TableRow key={category.id}>
+                  <TableCell className="font-medium">{category.display_order}</TableCell>
                   <TableCell>
                     <div className="h-12 w-12 bg-muted rounded overflow-hidden">
                       <img
@@ -314,14 +249,14 @@ export default function CMS() {
                   <TableCell>{category.name}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {category.subcategories.slice(0, 3).map((sub, i) => (
+                      {subcategories.filter(s => s.category_id === category.id).slice(0, 3).map((sub, i) => (
                         <Badge key={i} variant="secondary" className="text-xs">
-                          {sub}
+                          {sub.name}
                         </Badge>
                       ))}
-                      {category.subcategories.length > 3 && (
+                      {subcategories.filter(s => s.category_id === category.id).length > 3 && (
                         <Badge variant="secondary" className="text-xs">
-                          +{category.subcategories.length - 3}
+                          +{subcategories.filter(s => s.category_id === category.id).length - 3}
                         </Badge>
                       )}
                     </div>
@@ -407,13 +342,13 @@ export default function CMS() {
             <TableBody>
               {filteredSubcategories.map((subcategory) => (
                 <TableRow key={subcategory.id}>
-                  <TableCell className="font-medium">{subcategory.order}</TableCell>
+                  <TableCell className="font-medium">{categories.findIndex(c => c.id === subcategory.category_id) + 1}</TableCell>
                   <TableCell>{subcategory.name}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{subcategory.categoryName}</Badge>
+                    <Badge variant="outline">{categories.find(c => c.id === subcategory.category_id)?.name || "N/A"}</Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {subcategory.productsCount} products
+                    - products
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">

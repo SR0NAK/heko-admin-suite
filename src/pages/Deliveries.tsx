@@ -1,11 +1,12 @@
-import { useState } from "react";
 import { Truck, MapPin, Phone, Clock, CheckCircle2 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import { useDeliveries } from "@/hooks/useDeliveries";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,64 +14,34 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-interface Delivery {
-  id: string;
-  orderId: string;
-  customerName: string;
-  customerPhone: string;
-  pickupAddress: string;
-  deliveryAddress: string;
-  status: "assigned" | "picked_up" | "in_transit" | "delivered";
-  otp: string;
-  items: number;
-  amount: number;
-  scheduledTime: string;
-}
-
-const mockDeliveries: Delivery[] = [
-  {
-    id: "DEL001",
-    orderId: "ORD123",
-    customerName: "John Doe",
-    customerPhone: "+1234567890",
-    pickupAddress: "123 Store St, City",
-    deliveryAddress: "456 Customer Ave, City",
-    status: "assigned",
-    otp: "1234",
-    items: 3,
-    amount: 1299,
-    scheduledTime: "2024-01-15 14:30",
-  },
-  {
-    id: "DEL002",
-    orderId: "ORD124",
-    customerName: "Jane Smith",
-    customerPhone: "+1234567891",
-    pickupAddress: "789 Vendor Rd, City",
-    deliveryAddress: "321 Home Blvd, City",
-    status: "in_transit",
-    otp: "5678",
-    items: 2,
-    amount: 899,
-    scheduledTime: "2024-01-15 15:00",
-  },
-];
-
+import { toast } from "sonner";
 
 export default function Deliveries() {
-  const [deliveries, setDeliveries] = useState(mockDeliveries);
-  const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
+  const { deliveries, isLoading, updateDeliveryStatus } = useDeliveries();
   const [showOtpDialog, setShowOtpDialog] = useState(false);
+  const [selectedDelivery, setSelectedDelivery] = useState<any>(null);
   const [otpInput, setOtpInput] = useState("");
 
-  const getStatusColor = (status: Delivery["status"]) => {
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-12 w-64" />
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-48" />
+          ))}
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "assigned":
         return "bg-blue-500";
-      case "picked_up":
+      case "picked":
         return "bg-yellow-500";
-      case "in_transit":
+      case "out_for_delivery":
         return "bg-orange-500";
       case "delivered":
         return "bg-green-500";
@@ -79,31 +50,17 @@ export default function Deliveries() {
     }
   };
 
-  const handlePickup = (delivery: Delivery) => {
-    setDeliveries(
-      deliveries.map((d) =>
-        d.id === delivery.id ? { ...d, status: "picked_up" } : d
-      )
-    );
-    toast.success("Order picked up successfully!");
+  const handlePickup = (delivery: any) => {
+    updateDeliveryStatus({ deliveryId: delivery.id, status: "picked" });
   };
 
-  const handleStartDelivery = (delivery: Delivery) => {
-    setDeliveries(
-      deliveries.map((d) =>
-        d.id === delivery.id ? { ...d, status: "in_transit" } : d
-      )
-    );
-    toast.success("Delivery started!");
+  const handleStartDelivery = (delivery: any) => {
+    updateDeliveryStatus({ deliveryId: delivery.id, status: "out_for_delivery" });
   };
 
   const handleVerifyOtp = () => {
     if (selectedDelivery && otpInput === selectedDelivery.otp) {
-      setDeliveries(
-        deliveries.map((d) =>
-          d.id === selectedDelivery.id ? { ...d, status: "delivered" } : d
-        )
-      );
+      updateDeliveryStatus({ deliveryId: selectedDelivery.id, status: "delivered" });
       toast.success("Delivery completed successfully!");
       setShowOtpDialog(false);
       setOtpInput("");
@@ -113,7 +70,7 @@ export default function Deliveries() {
     }
   };
 
-  const openOtpDialog = (delivery: Delivery) => {
+  const openOtpDialog = (delivery: any) => {
     setSelectedDelivery(delivery);
     setShowOtpDialog(true);
   };
@@ -131,9 +88,9 @@ export default function Deliveries() {
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Truck className="h-5 w-5" />
-                      {delivery.orderId}
+                      {delivery.orders?.order_number || delivery.order_id}
                     </CardTitle>
-                    <CardDescription>{delivery.customerName}</CardDescription>
+                    <CardDescription>{delivery.vendors?.business_name || "N/A"}</CardDescription>
                   </div>
                   <Badge className={getStatusColor(delivery.status)}>
                     {delivery.status.replace("_", " ").toUpperCase()}
@@ -146,30 +103,30 @@ export default function Deliveries() {
                     <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
                     <div>
                       <p className="font-medium">Pickup</p>
-                      <p className="text-muted-foreground">{delivery.pickupAddress}</p>
+                      <p className="text-muted-foreground">{delivery.pickup_address}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
                     <MapPin className="h-4 w-4 mt-0.5 text-green-500" />
                     <div>
                       <p className="font-medium">Delivery</p>
-                      <p className="text-muted-foreground">{delivery.deliveryAddress}</p>
+                      <p className="text-muted-foreground">{delivery.delivery_address}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{delivery.customerPhone}</span>
+                    <span>{delivery.delivery_partners?.phone || "N/A"}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>{delivery.scheduledTime}</span>
+                    <span>{new Date(delivery.created_at).toLocaleString()}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t">
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      {delivery.items} items • ₹{delivery.amount}
+                      {delivery.orders?.order_number || "N/A"}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -181,7 +138,7 @@ export default function Deliveries() {
                         Mark Picked Up
                       </Button>
                     )}
-                    {delivery.status === "picked_up" && (
+                    {delivery.status === "picked" && (
                       <Button
                         size="sm"
                         onClick={() => handleStartDelivery(delivery)}
@@ -189,7 +146,7 @@ export default function Deliveries() {
                         Start Delivery
                       </Button>
                     )}
-                    {delivery.status === "in_transit" && (
+                    {delivery.status === "out_for_delivery" && (
                       <Button
                         size="sm"
                         onClick={() => openOtpDialog(delivery)}

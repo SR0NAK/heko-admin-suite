@@ -17,43 +17,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-const recentOrders = [
-  {
-    id: "ORD-001",
-    customer: "John Doe",
-    items: 5,
-    total: "₹1,250",
-    status: "out_for_delivery" as const,
-    vendor: "Fresh Mart",
-  },
-  {
-    id: "ORD-002",
-    customer: "Jane Smith",
-    items: 3,
-    total: "₹850",
-    status: "preparing" as const,
-    vendor: "Green Grocers",
-  },
-  {
-    id: "ORD-003",
-    customer: "Bob Wilson",
-    items: 7,
-    total: "₹2,100",
-    status: "delivered" as const,
-    vendor: "Fresh Mart",
-  },
-  {
-    id: "ORD-004",
-    customer: "Alice Brown",
-    items: 4,
-    total: "₹950",
-    status: "partially_accepted" as const,
-    vendor: "Multiple",
-  },
-];
+import { useDashboard } from "@/hooks/useDashboard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AdminDashboard() {
+  const { metrics, isLoading } = useDashboard();
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-12 w-64" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -66,30 +48,26 @@ export default function AdminDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="Total Orders"
-          value="1,284"
+          value={metrics?.totalOrders.toString() || "0"}
           icon={ShoppingCart}
-          trend={{ value: 12, label: "from last month" }}
           variant="default"
         />
         <MetricCard
           title="Active Vendors"
-          value="47"
+          value={metrics?.activeVendors.toString() || "0"}
           icon={Package}
-          trend={{ value: 8, label: "from last month" }}
           variant="primary"
         />
         <MetricCard
           title="Delivery Partners"
-          value="128"
+          value={metrics?.deliveryPartners.toString() || "0"}
           icon={Users}
-          trend={{ value: 15, label: "from last month" }}
           variant="secondary"
         />
         <MetricCard
-          title="Conversion Rate"
-          value="94%"
+          title="Pending Actions"
+          value={((metrics?.unassignedDeliveries || 0) + (metrics?.pendingReturns || 0)).toString()}
           icon={TrendingUp}
-          trend={{ value: 3, label: "from last month" }}
           variant="accent"
         />
       </div>
@@ -107,22 +85,22 @@ export default function AdminDashboard() {
               <div>
                 <p className="font-medium">Unassigned Deliveries</p>
                 <p className="text-sm text-muted-foreground">
-                  3 deliveries awaiting partner assignment
+                  {metrics?.unassignedDeliveries || 0} deliveries awaiting partner assignment
                 </p>
               </div>
               <span className="text-2xl font-bold text-[hsl(var(--status-pending))]">
-                3
+                {metrics?.unassignedDeliveries || 0}
               </span>
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
               <div>
                 <p className="font-medium">Pending Returns</p>
                 <p className="text-sm text-muted-foreground">
-                  5 return requests awaiting review
+                  {metrics?.pendingReturns || 0} return requests awaiting review
                 </p>
               </div>
               <span className="text-2xl font-bold text-[hsl(var(--status-pending))]">
-                5
+                {metrics?.pendingReturns || 0}
               </span>
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
@@ -195,13 +173,13 @@ export default function AdminDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentOrders.map((order) => (
+              {metrics?.recentOrders.map((order: any) => (
                 <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell>{order.customer}</TableCell>
-                  <TableCell>{order.vendor}</TableCell>
-                  <TableCell>{order.items}</TableCell>
-                  <TableCell className="font-semibold">{order.total}</TableCell>
+                  <TableCell className="font-medium">{order.order_number}</TableCell>
+                  <TableCell>{order.profiles?.name || "N/A"}</TableCell>
+                  <TableCell>-</TableCell>
+                  <TableCell>{order.order_items?.length || 0}</TableCell>
+                  <TableCell className="font-semibold">₹{order.total}</TableCell>
                   <TableCell>
                     <StatusBadge status={order.status} />
                   </TableCell>

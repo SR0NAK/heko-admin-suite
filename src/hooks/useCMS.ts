@@ -169,3 +169,25 @@ export const useSubcategories = () => {
 
   return { subcategories, isLoading, saveSubcategory: saveSubcategory.mutate, deleteSubcategory: deleteSubcategory.mutate };
 };
+
+export const useCMS = () => {
+  const bannersData = useBanners();
+  const categoriesData = useCategories();
+  const subcategoriesData = useSubcategories();
+
+  return {
+    banners: bannersData.banners,
+    categories: categoriesData.categories,
+    subcategories: subcategoriesData.subcategories,
+    isLoading: bannersData.isLoading || categoriesData.isLoading || subcategoriesData.isLoading,
+    createBanner: bannersData.saveBanner,
+    updateBanner: bannersData.saveBanner,
+    deleteBanner: bannersData.deleteBanner,
+    createCategory: categoriesData.saveCategory,
+    updateCategory: categoriesData.saveCategory,
+    deleteCategory: categoriesData.deleteCategory,
+    createSubcategory: subcategoriesData.saveSubcategory,
+    updateSubcategory: subcategoriesData.saveSubcategory,
+    deleteSubcategory: subcategoriesData.deleteSubcategory,
+  };
+};
