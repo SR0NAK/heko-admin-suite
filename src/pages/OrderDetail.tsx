@@ -150,11 +150,34 @@ export default function OrderDetail() {
                 <p className="font-medium">{order.profiles?.name || "N/A"}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <MapPin className="h-5 w-5 text-muted-foreground" />
-              <div>
+            <div className="flex items-start gap-3">
+              <MapPin className="h-5 w-5 text-muted-foreground mt-1" />
+              <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Delivery Address</p>
-                <p className="font-medium">{order.user_addresses?.address_line1 || "N/A"}</p>
+                {order.user_addresses ? (
+                  <div className="space-y-1">
+                    <p className="font-medium">{order.user_addresses.name}</p>
+                    <p className="text-sm">{order.user_addresses.phone}</p>
+                    <p className="text-sm">
+                      {order.user_addresses.address_line1}
+                      {order.user_addresses.address_line2 && `, ${order.user_addresses.address_line2}`}
+                    </p>
+                    {order.user_addresses.landmark && (
+                      <p className="text-sm text-muted-foreground">Landmark: {order.user_addresses.landmark}</p>
+                    )}
+                    <p className="text-sm">
+                      {order.user_addresses.city}, {order.user_addresses.state} - {order.user_addresses.pincode}
+                    </p>
+                    <Badge variant="outline" className="mt-1 capitalize">
+                      {order.user_addresses.type}
+                      {order.user_addresses.type === 'other' && order.user_addresses.other_label 
+                        ? ` - ${order.user_addresses.other_label}` 
+                        : ''}
+                    </Badge>
+                  </div>
+                ) : (
+                  <p className="font-medium">N/A</p>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-3">

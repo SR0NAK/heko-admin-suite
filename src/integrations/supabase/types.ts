@@ -820,11 +820,15 @@ export type Database = {
           created_at: string
           id: string
           is_default: boolean | null
-          label: string | null
-          latitude: number | null
-          longitude: number | null
+          landmark: string | null
+          lat: number | null
+          lng: number | null
+          name: string
+          other_label: string | null
+          phone: string
           pincode: string
           state: string
+          type: Database["public"]["Enums"]["address_type"]
           updated_at: string
           user_id: string
         }
@@ -835,11 +839,15 @@ export type Database = {
           created_at?: string
           id?: string
           is_default?: boolean | null
-          label?: string | null
-          latitude?: number | null
-          longitude?: number | null
+          landmark?: string | null
+          lat?: number | null
+          lng?: number | null
+          name: string
+          other_label?: string | null
+          phone: string
           pincode: string
           state: string
+          type: Database["public"]["Enums"]["address_type"]
           updated_at?: string
           user_id: string
         }
@@ -850,11 +858,15 @@ export type Database = {
           created_at?: string
           id?: string
           is_default?: boolean | null
-          label?: string | null
-          latitude?: number | null
-          longitude?: number | null
+          landmark?: string | null
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          other_label?: string | null
+          phone?: string
           pincode?: string
           state?: string
+          type?: Database["public"]["Enums"]["address_type"]
           updated_at?: string
           user_id?: string
         }
@@ -1055,6 +1067,7 @@ export type Database = {
       }
     }
     Enums: {
+      address_type: "home" | "work" | "other"
       app_role: "admin" | "vendor" | "delivery_partner" | "user" | "customer"
       delivery_status:
         | "assigned"
@@ -1227,6 +1240,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      address_type: ["home", "work", "other"],
       app_role: ["admin", "vendor", "delivery_partner", "user", "customer"],
       delivery_status: [
         "assigned",
