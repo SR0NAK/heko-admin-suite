@@ -89,6 +89,38 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          session_token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          session_token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          session_token?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deliveries: {
         Row: {
           accepted_at: string | null
@@ -413,6 +445,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      otp_verifications: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          otp: string
+          phone: string
+          verified: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          otp: string
+          phone: string
+          verified?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          otp?: string
+          phone?: string
+          verified?: boolean | null
+        }
+        Relationships: []
       }
       products: {
         Row: {
@@ -986,10 +1045,17 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      cleanup_expired_otps: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
-      app_role: "admin" | "vendor" | "delivery_partner" | "user"
+      app_role: "admin" | "vendor" | "delivery_partner" | "user" | "customer"
       delivery_status:
         | "assigned"
         | "accepted"
@@ -1161,7 +1227,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "vendor", "delivery_partner", "user"],
+      app_role: ["admin", "vendor", "delivery_partner", "user", "customer"],
       delivery_status: [
         "assigned",
         "accepted",
