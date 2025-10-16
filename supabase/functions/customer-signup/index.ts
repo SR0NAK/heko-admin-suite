@@ -40,13 +40,15 @@ serve(async (req) => {
       );
     }
 
-    // Generate referral code
+    // Generate referral code and profile ID
     const referralCode = `HEKO${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const profileId = crypto.randomUUID();
 
     // Create profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .insert({
+        id: profileId,
         name,
         phone,
         email: email || null,
