@@ -389,6 +389,7 @@ export type Database = {
           address_id: string | null
           created_at: string
           delivery_fee: number | null
+          delivery_notes: string | null
           delivery_window_end: string | null
           delivery_window_start: string | null
           discount: number | null
@@ -406,6 +407,7 @@ export type Database = {
           address_id?: string | null
           created_at?: string
           delivery_fee?: number | null
+          delivery_notes?: string | null
           delivery_window_end?: string | null
           delivery_window_start?: string | null
           discount?: number | null
@@ -423,6 +425,7 @@ export type Database = {
           address_id?: string | null
           created_at?: string
           delivery_fee?: number | null
+          delivery_notes?: string | null
           delivery_window_end?: string | null
           delivery_window_start?: string | null
           discount?: number | null

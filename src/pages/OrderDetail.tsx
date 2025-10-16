@@ -187,6 +187,15 @@ export default function OrderDetail() {
                 <p className="font-medium">{new Date(order.createdAt).toLocaleString()}</p>
               </div>
             </div>
+            {order.delivery_notes && (
+              <div className="flex items-start gap-3">
+                <Package className="h-5 w-5 text-muted-foreground mt-1" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Delivery Notes</p>
+                  <p className="font-medium">{order.delivery_notes}</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
