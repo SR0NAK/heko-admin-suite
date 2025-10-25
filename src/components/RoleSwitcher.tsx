@@ -50,14 +50,14 @@ export function RoleSwitcher({ currentRole, onRoleChange }: RoleSwitcherProps) {
           </div>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-56 bg-popover text-popover-foreground z-50">
+      <DropdownMenuContent align="start" className="w-56 bg-popover z-50">
         {Object.entries(roleConfig).map(([role, config]) => {
           const Icon = config.icon;
           return (
             <DropdownMenuItem
               key={role}
               onClick={() => onRoleChange(role as UserRole)}
-              className="flex items-center gap-2 cursor-pointer"
+              className="flex items-center gap-2 cursor-pointer text-black hover:text-orange-500 transition-colors"
             >
               <Icon className="h-4 w-4" />
               <div className="flex flex-col">
